@@ -1,0 +1,494 @@
+[
+  {
+    "package": "args",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "async",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "boolean_selector",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "characters",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "clock",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "code_assets",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "collection",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "crypto",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "fake_async",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "ffi",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "ffi_leak_tracker",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "file",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_driver",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_lints",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_localizations",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_secure_storage",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_secure_storage_darwin",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_secure_storage_linux",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_secure_storage_platform_interface",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_secure_storage_web",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_secure_storage_windows",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_test",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "flutter_web_plugins",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "fuchsia_remote_debug_protocol",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "hooks",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "http",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "http_parser",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "idb_shim",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "integration_test",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "intl",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "jni",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "jni_flutter",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "jni_util",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "leak_tracker",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "leak_tracker_flutter_testing",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "leak_tracker_testing",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "lints",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "logging",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "matcher",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "material_color_utilities",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "meta",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "objective_c",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "package_config",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path_provider",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path_provider_android",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path_provider_foundation",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path_provider_linux",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path_provider_platform_interface",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "path_provider_windows",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "platform",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "plugin_platform_interface",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "process",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "pub_semver",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "record_use",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "sembast",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "sembast_web",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences_android",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences_foundation",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences_linux",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences_platform_interface",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences_web",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "shared_preferences_windows",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "sky_engine",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "source_span",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "stack_trace",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "stream_channel",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "string_scanner",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "sync_http",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "synchronized",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "term_glyph",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "test_api",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "typed_data",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "vector_math",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "vm_service",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "web",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "webdriver",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "win32",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "xdg_directories",
+    "license_files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "package": "yaml",
+    "license_files": [
+      "LICENSE"
+    ]
+  }
+]

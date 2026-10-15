@@ -1,0 +1,1 @@
+Rappels multiples et report, étiquettes, suppression de projet conservant les tâches, exceptions de répétition, choix guidé en cas de conflit cloud, réduction des transferts cloud au repos.

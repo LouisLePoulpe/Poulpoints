@@ -1,0 +1,30 @@
+# TEMPLATE ONLY: supply the public repository, commit and verified Flutter srclib.
+Disabled: Build-server validation pending
+Categories:
+  - Time
+License: MIT
+AuthorName: Poulapp
+SourceCode: https://github.com/LouisLePoulpe/Poulpoints
+IssueTracker: https://github.com/LouisLePoulpe/Poulpoints/issues
+RepoType: git
+Repo: https://github.com/LouisLePoulpe/Poulpoints.git
+AutoName: Poulpoints
+Builds:
+  - versionName: 0.7.1
+    versionCode: 20
+    commit: REPLACE_WITH_RELEASE_COMMIT
+    output: build/app/outputs/flutter-apk/app-release.apk
+    srclibs:
+      - flutter@abaf9c523780a608bd46686fd5e53740a07077f8
+    prebuild:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - $$flutter$$/bin/flutter config --no-analytics
+      - $$flutter$$/bin/flutter pub get --enforce-lockfile
+    build:
+      - export PUB_CACHE=$(pwd)/.pub-cache
+      - unset POULPOINTS_TEST_SIGNING POULPOINTS_SIGNING_PROPERTIES
+      - $$flutter$$/bin/flutter build apk --release --target-platform android-arm64
+AutoUpdateMode: None
+UpdateCheckMode: None
+CurrentVersion: 0.7.1
+CurrentVersionCode: 20

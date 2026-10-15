@@ -1,0 +1,5 @@
+# Copy outside this project. Never commit the real file or the keystore.
+storeFile=/absolute/private/path/poulpoints-release.jks
+storePassword=REPLACE_LOCALLY
+keyAlias=poulpoints
+keyPassword=REPLACE_LOCALLY

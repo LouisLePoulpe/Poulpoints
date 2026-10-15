@@ -1,0 +1,1 @@
+French calendar with Monday/Sunday week start. Multiple reminders displayed as editable rows. KDE widget task grouping and centered separators.
