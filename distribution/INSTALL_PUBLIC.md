@@ -1,22 +1,7 @@
-# Première diffusion publique 0.7.1
+# Poulpoints 0.8.0 — Installation
 
-## Android ARM64
+Android ARM64 : installer Poulpoints_v0.8.0_Android_ARM64.apk. Cet APK est signé avec le certificat de production, comme celui de GitHub 0.7.1. Il ne remplace pas directement un APK personnel signé pour les essais : ne pas désinstaller ce dernier ni effacer ses données ; utiliser l’APK d’essai fourni séparément dans la conversation pour cette installation.
 
-Le fichier Poulpoints_v0.7.1_Android_ARM64.apk utilise la clé de production Poulapp. Il ne peut pas mettre directement à jour les APK d’essai déjà installés : leur certificat est différent. Ne désinstallez pas votre version d’essai sans export vérifié et procédure de migration. Le Pixel de développement reste volontairement sur la version d’essai.
+Linux Bazzite/KDE : extraire l’archive, puis lancer `bash desktop/install.sh bundle` depuis le dossier extrait, hors Distrobox. L’environnement `poulpoints-dev` doit déjà exister. Enregistrer les modifications, quitter entièrement l’ancienne instance (la fermeture de fenêtre peut la laisser en arrière-plan), puis relancer depuis le menu. Ce paquet est destiné à Bazzite avec l’environnement Fedora/Distrobox existant, pas à toutes les distributions Linux.
 
-Pour une nouvelle installation, installer l’APK et autoriser les notifications selon les fonctions souhaitées. La synchronisation cloud est facultative et nécessite un serveur et un compte autorisé. Le cloud Poulapp personnel n’est pas un service d’inscription publique.
-
-## Linux Bazzite KDE
-
-Extraire Poulpoints_v0.7.1_Linux_Bazzite_KDE.tar.gz. Depuis Bazzite, hors du conteneur :
-
-```sh
-cd Poulpoints_v0.7.1
-bash desktop/install.sh bundle
-```
-
-L’environnement Distrobox poulpoints-dev doit déjà contenir les bibliothèques nécessaires. Enregistrer toute modification et fermer l’ancienne instance résidente avant de démarrer la nouvelle. Le widget KDE inclut le correctif 0.7.1.2. Plasma peut nécessiter une reconnexion de session pour charger sa présentation.
-
-## Fichiers et contrôle
-
-SHA256SUMS contient les empreintes des fichiers de cette livraison. Les notices des dépendances sont dans l’archive source et le dossier distribution du paquet Linux. F-Droid n’a pas encore publié l’application.
+Pièces jointes : ouvrir une tâche enregistrée, descendre sous les notes et choisir « Ajouter une pièce jointe ». Connexion au cloud nécessaire, 10 Mo par fichier. Terminer la tâche supprime sa copie cloud après synchronisation ; le fichier original reste intact. Pour une instance auto-hébergée, déployer les migrations et la fonction décrites dans ATTACHMENTS.md.

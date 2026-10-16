@@ -116,6 +116,7 @@ class _TaskEditorState extends State<TaskEditor> {
         id:
             widget.existing?.id ??
             DateTime.now().microsecondsSinceEpoch.toString(),
+        attachmentCycle: widget.existing?.attachmentCycle ?? 0,
         title: title.text.trim(),
         list: list,
         done: widget.existing?.done ?? false,

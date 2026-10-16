@@ -28,6 +28,7 @@ class Task {
     this.tags = const [],
     this.occurrenceAnchor,
     this.snoozedUntil,
+    this.attachmentCycle = 0,
   });
 
   final String id;
@@ -48,6 +49,7 @@ class Task {
   final List<String> tags;
   final DateTime? occurrenceAnchor;
   final DateTime? snoozedUntil;
+  final int attachmentCycle;
   List<int> get reminders =>
       (reminderOffsets ??
               (reminderMinutes == null ? <int>[] : [reminderMinutes!]))
@@ -74,10 +76,12 @@ class Task {
     bool clearOccurrenceAnchor = false,
     DateTime? snoozedUntil,
     bool clearSnooze = false,
+    int? attachmentCycle,
     String? notes,
     List<Subtask>? subtasks,
   }) => Task(
     id: id,
+    attachmentCycle: attachmentCycle ?? this.attachmentCycle,
     title: title ?? this.title,
     list: list ?? this.list,
     done: done ?? this.done,
@@ -110,6 +114,7 @@ class Task {
 
   Map<String, dynamic> toJson() => {
     'id': id,
+    if (attachmentCycle > 0) 'attachmentCycle': attachmentCycle,
     'title': title,
     'list': list,
     'done': done,
@@ -131,6 +136,7 @@ class Task {
   };
 
   factory Task.fromJson(Map<String, dynamic> data) => Task(
+    attachmentCycle: (data['attachmentCycle'] as num?)?.toInt() ?? 0,
     reminderMinutes: data['reminderMinutes'] as int?,
     reminderOffsets: (data['reminderOffsets'] as List?)?.cast<int>(),
     tags: (data['tags'] as List?)?.cast<String>() ?? const [],

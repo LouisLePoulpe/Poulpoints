@@ -16,7 +16,7 @@ Définir PGSERVICE, PGDATABASE et POULPOINTS_BACKUP_DIR, puis exécuter `bash op
 
 Le dump contient des données personnelles et peut contenir des données d’autres applications. Le placer sur un volume chiffré et conserver une copie hors de l’ordinateur. Proposition de rétention à valider : 7 quotidiennes, 4 hebdomadaires, 3 mensuelles. Aucun calendrier automatique ni alerte n’est encore activé.
 
-Le dump logique n’inclut pas les objets binaires Supabase Storage ni les réglages du projet (SMTP, OAuth, restrictions réseau, etc.). Poulpoints n’utilise pas Storage, mais d’autres applications du projet peuvent en avoir besoin. Documenter ces réglages séparément. Les rôles globaux nécessitent aussi une sauvegarde administrative adaptée.
+Le dump logique n’inclut pas les objets binaires Supabase Storage ni les réglages du projet (SMTP, OAuth, restrictions réseau, etc.). Poulpoints utilise désormais le bucket privé `poulpoints-attachments`. Les fichiers ne sont pas inclus dans le dump SQL. Une restauration de métadonnées seule ne restaure pas les fichiers ; ne pas présenter ce dump comme une sauvegarde complète des pièces jointes. Documenter ces réglages séparément. Les rôles globaux nécessitent aussi une sauvegarde administrative adaptée.
 
 ## Restauration
 

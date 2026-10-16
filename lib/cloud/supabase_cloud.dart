@@ -328,6 +328,48 @@ class SupabaseCloud {
     userId = null;
   }
 
+  Future<Map<String, dynamic>> attachmentAction(
+    String action,
+    String task, {
+    String? id,
+  }) async {
+    await _ensureToken();
+    final response = await _client
+        .post(
+          _uri('/functions/v1/poulpoints-attachments'),
+          headers: _headers(),
+          body: jsonEncode({'action': action, 'task': task, 'id': id}),
+        )
+        .timeout(const Duration(seconds: 30));
+    return Map<String, dynamic>.from(_decode(response) as Map);
+  }
+
+  Future<void> uploadAttachment(
+    String task,
+    String name,
+    List<int> bytes,
+  ) async {
+    if (bytes.isEmpty || bytes.length > 10 * 1024 * 1024) {
+      throw const FormatException(
+        'Le fichier doit contenir entre 1 octet et 10 Mo.',
+      );
+    }
+    await _ensureToken();
+    final request = http.MultipartRequest(
+      'POST',
+      _uri('/functions/v1/poulpoints-attachments'),
+    );
+    request.headers.addAll(_headers()..remove('Content-Type'));
+    request.fields['task'] = task;
+    request.files.add(
+      http.MultipartFile.fromBytes('file', bytes, filename: name),
+    );
+    final response = await http.Response.fromStream(
+      await _client.send(request),
+    ).timeout(const Duration(seconds: 120));
+    _decode(response);
+  }
+
   void dispose() {
     signOut();
     if (_ownsClient) _client.close();

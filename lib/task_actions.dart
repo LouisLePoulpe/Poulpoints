@@ -5,12 +5,24 @@ import 'models.dart';
 Task completeTask(Task task, bool done) {
   final date = task.occurrenceAnchor ?? task.dueDate;
   if (!done || task.done || date == null || task.recurrence == 'none') {
-    return task.copyWith(done: done, clearSnooze: done);
+    return task.copyWith(
+      done: done,
+      clearSnooze: done,
+      attachmentCycle: done && !task.done
+          ? task.attachmentCycle + 1
+          : task.attachmentCycle,
+    );
   }
   final DateTime next;
   if (task.recurrence == 'custom') {
     if (task.recurrenceRule == null) {
-      return task.copyWith(done: done, clearSnooze: done);
+      return task.copyWith(
+        done: done,
+        clearSnooze: done,
+        attachmentCycle: done && !task.done
+            ? task.attachmentCycle + 1
+            : task.attachmentCycle,
+      );
     }
     next = task.recurrenceRule!.next(date.toLocal());
   } else if (task.recurrence == 'monthly') {
@@ -33,6 +45,7 @@ Task completeTask(Task task, bool done) {
   }
   return task.copyWith(
     done: false,
+    attachmentCycle: task.attachmentCycle + 1,
     clearOccurrenceAnchor: true,
     clearSnooze: true,
     dueDate: next,

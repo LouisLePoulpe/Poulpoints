@@ -12,11 +12,11 @@ Tâches et sous-tâches, projets, priorités, échéances datées et horaires, l
 
 La suppression d’un projet transfère ses tâches. Les exceptions de récurrence concernent l’occurrence courante. La résolution d’un conflit choisit une version complète de la tâche.
 
-## Version 0.7.1
+## Version 0.8.0
 
-Inclut le correctif de disposition KDE 0.7.1.2. Application Android : versionCode 20.
+Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Application Android : versionCode 21.
 
-- [Installation](INSTALLATION_0.7.1.md)
+- [Installation](distribution/INSTALL_PUBLIC.md)
 - [Compilation et signature](distribution/RELEASE.md)
 - [Données personnelles](PRIVACY.md)
 - [Licences](distribution/LICENSE_AUDIT.md)

@@ -1,3 +1,4 @@
+import 'attachments.dart';
 import 'calendar_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'dart:convert';
@@ -1484,6 +1485,13 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
           onChanged: (value) => _change(
             _tasks.firstWhere((t) => t.id == task.id).copyWith(notes: value),
           ),
+        ),
+        Attachments(
+          key: ValueKey('${task.id}-${task.attachmentCycle}'),
+          taskId: task.id,
+          cloud: _cloud,
+          synchronize: () => _syncCloud(),
+          done: task.done,
         ),
         const SizedBox(height: 20),
         OutlinedButton.icon(

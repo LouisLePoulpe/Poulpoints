@@ -1,7 +1,7 @@
 name: poulpoints
 description: Gestion de tâches libre et multiplateforme de Poulapp.
 publish_to: none
-version: 0.7.1+20
+version: 0.8.0+21
 
 environment:
   sdk: '>=3.9.0 <4.0.0'
@@ -13,6 +13,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.2
+  file_selector: 1.1.0
+  url_launcher: ^6.3.2
   sembast: ^3.8.5
   sembast_web: ^2.4.2
   path_provider: ^2.1.5

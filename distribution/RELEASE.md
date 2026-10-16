@@ -26,9 +26,9 @@ Sans ces variables, la release est non signée, notamment pour la compilation pa
 
 Changer de certificat empêche une mise à jour directe des APK d’essai existants. Avant la première distribution publique, choisir la stratégie de signature et prévoir export/import pour les testeurs. Ne pas désinstaller la version personnelle sans sauvegarde.
 
-## Publication à terminer
+## Publication
 
-Le dépôt public prévu est https://github.com/LouisLePoulpe/Poulpoints. Y placer le contenu de poulpoints_starter (sans caches, données ni secrets), vérifier les notices des dépendances, figer le commit et créer le tag v0.7.1 après validation. Publier sources, binaires, instructions et empreintes SHA-256. Les captures publiques doivent utiliser des tâches fictives. Aucun dépôt ni envoi public n’a été effectué.
+Dépôt public : https://github.com/LouisLePoulpe/Poulpoints. La 0.8.0 est livrée avec sources, APK de production, archive Linux, licences et empreintes SHA-256. Le dossier F-Droid est distinct et reste à finaliser.
 
 ## Linux
 
