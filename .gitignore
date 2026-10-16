@@ -28,3 +28,6 @@ __pycache__/
 .gradle/
 
 supabase/.temp/
+
+# Kotlin compiler local sessions
+android/.kotlin/
