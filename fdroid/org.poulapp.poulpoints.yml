@@ -6,19 +6,14 @@ SourceCode: https://github.com/LouisLePoulpe/Poulpoints
 IssueTracker: https://github.com/LouisLePoulpe/Poulpoints/issues
 
 AutoName: Poulpoints
-Summary: Tasks, recurring reminders and home screen widgets
-Description: |
-  Manage tasks, projects, subtasks and recurring reminders offline.
-  Optional synchronization with a configurable Supabase server.
-  Android home screen widget with scrolling and task completion.
 
 RepoType: git
 Repo: https://github.com/LouisLePoulpe/Poulpoints.git
 
 Builds:
-  - versionName: 0.7.1
-    versionCode: 20
-    commit: v0.7.1
+  - versionName: 0.8.0
+    versionCode: 21
+    commit: 949a4efc02d4778a11a5e695cc1074da0316d0af
     output: build/app/outputs/flutter-apk/app-release.apk
     srclibs:
       - flutter@abaf9c523780a608bd46686fd5e53740a07077f8
@@ -33,7 +28,8 @@ Builds:
       - unset POULPOINTS_TEST_SIGNING POULPOINTS_SIGNING_PROPERTIES
       - $$flutter$$/bin/flutter build apk --release --target-platform android-arm64
 
-AutoUpdateMode: None
-UpdateCheckMode: None
-CurrentVersion: 0.7.1
-CurrentVersionCode: 20
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
+UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
+CurrentVersion: 0.8.0
+CurrentVersionCode: 21

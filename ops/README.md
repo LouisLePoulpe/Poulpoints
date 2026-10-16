@@ -27,3 +27,33 @@ Vérifier les nombres d’enregistrements, les marqueurs de suppression, les ré
 Références :
 - https://supabase.com/docs/guides/platform/backups
 - https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
+
+## Sauvegardes chiffrées et contrôle périodique
+
+`backup_cloud.py --config CHEMIN_PRIVE` exporte la base du projet Supabase
+(format pg_dump) et les objets du bucket privé `poulpoints-attachments`.
+La base exportée couvre le projet partagé, y compris ses autres applications ;
+les fichiers Storage sauvegardés couvrent uniquement Poulpoints.
+La configuration et le mot de passe de chiffrement restent hors du dépôt.
+Seules les archives chiffrées et leurs empreintes sont déposées dans kDrive.
+Les fichiers temporaires en clair restent dans un répertoire privé local.
+
+`verify_cloud_backup.py ARCHIVE --passphrase-file FICHIER_PRIVE` déchiffre
+l'archive, contrôle les empreintes, restaure les trois tables Poulpoints dans
+une base PostgreSQL locale jetable et vérifie les fichiers référencés.
+Ce test ne modifie pas le serveur et ne constitue pas un test de restauration
+complète des comptes Auth, des autres applications ou du service Storage.
+
+`install_backup_timer.sh` n'active les sauvegardes quotidiennes et les contrôles
+horaires qu'après réussite d'une sauvegarde réelle et du test de restauration.
+Ces opérations fonctionnent lorsque cet ordinateur et sa session sont disponibles.
+Vérifier séparément que kDrive a effectivement envoyé les archives en ligne.
+Conserver le mot de passe de chiffrement dans un gestionnaire de mots de passe
+indépendant : une archive seule ne suffit pas pour restaurer.
+
+Le contrôle surveille la taille de la base, le volume des pièces jointes,
+les suppressions en retard et l'ancienneté de la dernière sauvegarde.
+Il ne remplace pas le suivi des quotas de trafic et de facturation Supabase.
+Les archives sont conservées sans suppression automatique ; elles peuvent donc
+contenir des pièces jointes supprimées depuis dans l'application. Définir une
+politique de conservation avant une exploitation prolongée.
