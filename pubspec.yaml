@@ -1,7 +1,7 @@
 name: poulpoints
 description: Gestion de tâches libre et multiplateforme de Poulapp.
 publish_to: none
-version: 0.8.0+21
+version: 0.8.1+22
 
 environment:
   sdk: '>=3.9.0 <4.0.0'

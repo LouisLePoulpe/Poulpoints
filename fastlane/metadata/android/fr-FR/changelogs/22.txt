@@ -1,0 +1,1 @@
+Préparation F-Droid : Flutter épinglé en sous-module et compilation dans un chemin constant. Fonctionnalités inchangées depuis la 0.8.0.
