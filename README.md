@@ -8,7 +8,7 @@ Android et Linux/Bazzite KDE sont testés. Windows, Web et notifications Web res
 
 ## Fonctionnalités
 
-Tâches et sous-tâches, projets, priorités, échéances datées et horaires, lieux, notes, étiquettes, recherche, récurrences personnalisées, rappels multiples et report. Widgets Android et KDE avec validation sans ouvrir la fenêtre et synchronisation en arrière-plan. Résolution manuelle des conflits cloud. Calendrier français, lundi ou dimanche au choix ; thèmes clair et sombre.
+Tâches et sous-tâches, projets, priorités, échéances datées et horaires, lieux, notes, étiquettes, recherche, récurrences personnalisées, rappels multiples et report. Widgets Android et KDE : toucher le titre ouvre la tâche ; cocher la case la termine sans ouvrir la fenêtre et synchronisation en arrière-plan. Résolution manuelle des conflits cloud. Calendrier français, lundi ou dimanche au choix ; thèmes clair et sombre.
 
 La suppression d’un projet transfère ses tâches. Les exceptions de récurrence concernent l’occurrence courante. La résolution d’un conflit choisit une version complète de la tâche.
 

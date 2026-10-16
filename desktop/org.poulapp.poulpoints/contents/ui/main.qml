@@ -96,6 +96,16 @@ PlasmoidItem {
                             elide: Text.ElideRight
                         }
                     }
+                    MouseArea {
+                        anchors.fill: taskInfo
+                        cursorShape: Qt.PointingHandCursor
+                        activeFocusOnTab: true
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Ouvrir " + taskRow.modelData.title
+                        Keys.onReturnPressed: clicked(null)
+                        Keys.onSpacePressed: clicked(null)
+                        onClicked: root.run("open-task " + Qt.btoa(unescape(encodeURIComponent(JSON.stringify({id:taskRow.modelData.id, revision:taskRow.modelData.revision})))))
+                    }
                     Rectangle {
                         anchors.left: taskInfo.left
                         anchors.right: parent.right

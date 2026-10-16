@@ -6,6 +6,16 @@ from unittest.mock import patch
 import helper
 
 class CompanionTests(unittest.TestCase):
+    def test_row_and_checkbox_have_distinct_launch_modes(self):
+        import base64
+        payload = base64.b64encode(json.dumps({'id':'é-42','revision':'12'}).encode()).decode()
+        for operation in ('open-task', 'complete'):
+            with tempfile.TemporaryDirectory() as folder, patch.object(helper,'ROOT',Path(folder)), patch('helper.launch') as launch, patch('sys.argv',['helper',operation,payload]):
+                helper.main()
+                launch.assert_called_once_with(background=operation == 'complete')
+                command=json.loads(next((Path(folder)/'commands').glob('*.json')).read_text())
+                self.assertEqual(command['id'],'é-42')
+                self.assertEqual(command['action'],operation)
     def test_multiple_reminders_and_snooze_are_independent(self):
         task={'id':'a','remindAt':1000,'remindAts':[1000,2000,3000]}
         calls=[]

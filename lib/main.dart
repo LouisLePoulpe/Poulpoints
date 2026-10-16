@@ -211,6 +211,23 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
       for (final command in await _bridge.commands()) {
         if (!mounted || !_canEdit || _saving > 0 || _editorOpen) return;
         final token = command['token'] as String;
+        if (command['action'] == 'open-task') {
+          await _bridge.ack(token);
+          if (!mounted) return;
+          final matches = _tasks.where((task) => task.id == command['id']);
+          if (matches.isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Cette tâche n’est plus disponible.'),
+              ),
+            );
+          } else if (MediaQuery.sizeOf(context).width >= 850) {
+            setState(() => _selectedTask = matches.first);
+          } else {
+            await _showTaskDetails(matches.first);
+          }
+          continue;
+        }
         if (command['action'] == 'new') {
           await _bridge.ack(token);
           await _openEditor();

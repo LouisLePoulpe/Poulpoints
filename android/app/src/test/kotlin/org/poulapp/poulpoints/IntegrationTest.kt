@@ -168,12 +168,26 @@ class IntegrationTest {
         rows.onDataSetChanged()
         assertEquals(0,rows.count)
     }
+    @Test fun taskTitleOpensExactTaskAndRejectsForgedIntent() {
+        val intent = Intent(shadowOf(WidgetTasks.template(app,99)).savedIntent)
+            .putExtra("operation","open-task").putExtra("id","task-42")
+        WidgetActionReceiver().onReceive(app, Intent(intent).putExtra("authorization","invalid"))
+        assertNull(shadowOf(app).nextStartedActivity)
+        WidgetActionReceiver().onReceive(app, intent)
+        val launched = shadowOf(app).nextStartedActivity
+        assertEquals(MainActivity::class.java.name, launched.component!!.className)
+        assertEquals("task-42", launched.getStringExtra("id"))
+        Integration.acceptAction(app, launched)
+        val commands = JSONObject(Integration.prefs(app).getString("commands","{}")!!)
+        assertEquals("open-task",commands.getJSONObject(commands.keys().next()).getString("action"))
+        assertFalse(Integration.hasCompletions(app))
+    }
     @Test fun collectionCompletionUsesBroadcastAndFilledTaskVersion() {
         val pending = WidgetTasks.template(app,99)
         assertTrue(pending.isBroadcast)
         assertFalse(pending.isImmutable)
         val intent = Intent(shadowOf(pending).savedIntent)
-        intent.fillIn(Intent().putExtra("id","last-row").putExtra("revision","51"),0)
+        intent.fillIn(Intent().putExtra("operation","complete").putExtra("id","last-row").putExtra("revision","51"),0)
         Integration.acceptAction(app,intent)
         val commands = JSONObject(Integration.prefs(app).getString("commands","{}")!!)
         val command = commands.getJSONObject(commands.keys().next())

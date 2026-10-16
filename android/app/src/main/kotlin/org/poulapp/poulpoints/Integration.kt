@@ -16,7 +16,7 @@ object Integration {
         if (intent.action != "org.poulapp.poulpoints.WIDGET") return
         if (intent.getStringExtra("authorization") != actionKey(c)) return
         val action = intent.getStringExtra("operation") ?: return
-        if (action !in listOf("complete", "new", "snooze")) return
+        if (action !in listOf("complete", "new", "snooze", "open-task")) return
         // Intent contents are untrusted; Flutter verifies ID and revision before applying.
         val id = intent.getStringExtra("id") ?: ""
         val revision = intent.getStringExtra("revision") ?: ""

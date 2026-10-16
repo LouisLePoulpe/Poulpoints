@@ -1,1 +1,2 @@
 Préparation F-Droid : Flutter épinglé en sous-module et compilation dans un chemin constant. Fonctionnalités inchangées depuis la 0.8.0.
+Toucher le titre dans un widget ouvre la tâche. Cocher la case la termine sans ouvrir de fenêtre.

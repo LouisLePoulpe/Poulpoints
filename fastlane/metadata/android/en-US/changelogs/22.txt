@@ -1,1 +1,2 @@
 F-Droid preparation: pinned Flutter submodule and fixed build path. Same application features as 0.8.0. Screenshots show the French interface using fictional tasks.
+Tap a widget task title to open its details. The checkbox completes it without opening a window.

@@ -91,6 +91,28 @@ void main() {
     );
   });
   tearDown(() => repository.close());
+  testWidgets('Widget title opens details without changing the task', (
+    tester,
+  ) async {
+    final bridge = MemoryBridge();
+    await tester.pumpWidget(
+      PoulpointsApp(repository: repository, integrationBridge: bridge),
+    );
+    await tester.pumpAndSettle();
+    bridge.pending.add({
+      'token': 'open',
+      'action': 'open-task',
+      'id': 'one',
+      'revision': 'old',
+    });
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(bridge.pending, isEmpty);
+    expect(repository.data.tasks.single.updatedAt, 42);
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+  });
   testWidgets(
     'Widget completion saves and reschedules once; stale duplicate is ignored',
     (tester) async {

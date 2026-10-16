@@ -16,9 +16,8 @@ object WidgetTasks {
             .setAction("org.poulapp.poulpoints.WIDGET")
             .setData(Uri.parse("poulpoints-completion://widget/$widget"))
             .putExtra("authorization", Integration.actionKey(c))
-            .putExtra("operation", "complete")
         // Collection rows must fill in their task ID and revision. The target
-        // receiver and operation are fixed; the receiver still verifies the key.
+        // receiver is fixed; the receiver still verifies the key.
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
             (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
         return PendingIntent.getBroadcast(c, widget, intent, flags)
@@ -29,9 +28,13 @@ object WidgetTasks {
         val due = if (task.isNull("due")) "" else " · " + java.text.DateFormat.getDateTimeInstance(
             java.text.DateFormat.SHORT, java.text.DateFormat.SHORT).format(java.util.Date(task.getLong("due")))
         row.setTextViewText(R.id.task_detail, task.getString("list") + due)
-        row.setOnClickFillInIntent(R.id.task_done, Intent()
+        row.setOnClickFillInIntent(R.id.task_done, Intent().putExtra("operation", "complete")
             .putExtra("id", task.getString("id"))
             .putExtra("revision", task.getString("revision")))
+        row.setContentDescription(R.id.task_info, "Ouvrir " + task.getString("title"))
+        row.setOnClickFillInIntent(R.id.task_info, Intent()
+            .putExtra("operation", "open-task")
+            .putExtra("id", task.getString("id")))
         return row
     }
 }

@@ -35,10 +35,10 @@ def read_snapshot():
         return {"tasks": [], "error": "Ouvrez Poulpoints une première fois."}
 
 def enqueue(action, payload=None):
-    if action not in ("complete", "new"):
+    if action not in ("complete", "new", "open-task"):
         raise ValueError("Unknown action")
     command = {"action": action}
-    if action == "complete":
+    if action in ("complete", "open-task"):
         if not isinstance(payload, dict) or not all(isinstance(payload.get(k), str) for k in ("id", "revision")):
             raise ValueError("Invalid task")
         command.update(id=payload["id"], revision=payload["revision"])
@@ -104,9 +104,9 @@ def main():
     elif operation == "watch": watch()
     elif operation == "open": launch()
     elif operation == "new": enqueue("new"); launch()
-    elif operation == "complete":
+    elif operation in ("complete", "open-task"):
         payload = json.loads(base64.b64decode(sys.argv[2], validate=True).decode("utf-8"))
-        enqueue("complete",payload); launch(background=True)
+        enqueue(operation,payload); launch(background=operation == "complete")
     else: raise ValueError("Unknown operation")
 
 if __name__ == "__main__": main()

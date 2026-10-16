@@ -1,8 +1,8 @@
+// Screenshot harness intentionally lives outside the default test suite.
+// ignore_for_file: invalid_use_of_visible_for_testing_member
 // Render the real app with an isolated, fictional database; no user data or cloud.
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:poulpoints/main.dart';
