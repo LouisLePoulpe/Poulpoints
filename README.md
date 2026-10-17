@@ -8,13 +8,13 @@ Android et Linux/Bazzite KDE sont testés. Windows, Web et notifications Web res
 
 ## Fonctionnalités
 
-Tâches et sous-tâches, projets, priorités, échéances datées et horaires, lieux, notes, étiquettes, recherche, récurrences personnalisées, rappels multiples et report. Widgets Android et KDE : toucher le titre ouvre la tâche ; cocher la case la termine sans ouvrir la fenêtre et synchronisation en arrière-plan. Résolution manuelle des conflits cloud. Calendrier français, lundi ou dimanche au choix ; thèmes clair et sombre.
+Tâches et sous-tâches, projets, priorités, échéances datées et horaires, lieux, notes, étiquettes, recherche, récurrences personnalisées, rappels multiples et report. Widgets Android et KDE : toucher le titre ouvre la tâche ; cocher la case la termine sans ouvrir la fenêtre. Synchronisation en arrière-plan. Résolution manuelle des conflits cloud. Calendrier français, lundi ou dimanche au choix ; thèmes clair et sombre.
 
 La suppression d’un projet transfère ses tâches. Les exceptions de récurrence concernent l’occurrence courante. La résolution d’un conflit choisit une version complète de la tâche.
 
-## Version 0.8.0
+## Version 0.8.1
 
-Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Application Android : versionCode 21.
+Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Navigation directe depuis les widgets. Application Android : versionCode 22.
 
 - [Installation](distribution/INSTALL_PUBLIC.md)
 - [Compilation et signature](distribution/RELEASE.md)
@@ -23,6 +23,8 @@ Pièces jointes cloud privées, suppression automatique après complétion et af
 - [Préparation F-Droid](fdroid/README.md)
 
 ## Compilation
+
+Pour récupérer aussi le SDK fixé : `git clone --recurse-submodules https://github.com/LouisLePoulpe/Poulpoints.git`. Pour vérifier la reproductibilité Android : `tool/build_reproducible.sh DOSSIER_SORTIE` dans un clone Git complet.
 
 Utiliser Flutter 3.47.7 (révision dans distribution/BUILD_ENVIRONMENT.json), Java 17 et le SDK Android, ou les bibliothèques de compilation Linux. Puis :
 

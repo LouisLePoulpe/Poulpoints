@@ -1,15 +1,14 @@
 # Candidature F-Droid
 
-Dépôt public : https://github.com/LouisLePoulpe/Poulpoints
-Application : org.poulapp.poulpoints ; version 0.7.1, code 20 ; licence MIT.
+Application : org.poulapp.poulpoints ; version 0.8.1, code 22 ; licence MIT.
+Dépôt : https://github.com/LouisLePoulpe/Poulpoints
+Candidature en brouillon : https://gitlab.com/fdroid/fdroiddata/-/merge_requests/52699
 
-La recette org.poulapp.poulpoints.yml a passé fdroid lint (fdroidserver 2.4.5) avec la configuration des catégories officielle. L’APK ARM64 signé en production a passé le scanner binaire F-Droid sans détection de classe propriétaire connue ni bloc de signature supplémentaire. La commande fdroid build --test --scan-binary --no-tarball a ensuite réussi localement dans Fedora/Distrobox depuis le tag public v0.7.1, avec le SDK Flutter téléchargé par la recette. Cela ne remplace pas encore une exécution sur le buildserver officiel.
+La recette 0.8.0 a passé la CI GitLab. La recette 0.8.1 utilise le sous-module Flutter fixé, le commit complet de la livraison, les mises à jour par tags et les captures Fastlane fictives en français et anglais. Elle demande la conservation du certificat de production via Binaries et AllowedAPKSigningKeys.
 
-Le scanner des sources et paquets téléchargés a réussi. Restent : confirmation dans le buildserver officiel, captures publiques fictives et accès GitLab pour soumettre la demande. Aucun dossier n’a encore été envoyé aux mainteneurs. Ne pas désactiver globalement le scanner pour contourner un problème.
+Deux compilations locales indépendantes de la 0.8.1, l’une signée et l’autre non signée, ont donné les mêmes fichiers hors signatures. La commande apksigcopier compare --unsigned a réussi : la signature de production valide la seconde compilation. Le SDK et les chemins de compilation fixes éliminent les différences natives observées en 0.8.0.
 
-La recette utilise une révision Flutter fixe et PUB_CACHE dans l’arbre scanné. La disponibilité de cette révision et des outils doit être confirmée par la construction indépendante. Le fichier .yml.in est un ancien brouillon conservé pour référence.
-
-La comparaison locale des contenus ZIP hors META-INF trouve quatre fichiers natifs différents (libapp.so et trois libdartjni.so) : la reproductibilité n’est pas acquise. L’APK GitHub possède la signature de production Poulapp. Si F-Droid signe avec sa propre clé, les mises à jour entre les deux canaux ne seront pas directement interchangeables. Préférer étudier la reproductibilité avant la première publication F-Droid.
+Cette preuve locale ne remplace pas la validation dans l’environnement officiel F-Droid. La recette déplace temporairement le dépôt vers le même chemin fixe et ramène le cache des dépendances dans l’arbre pour le scanner. Ne pas désactiver globalement le scanner pour contourner un problème. La candidature reste en brouillon tant que la nouvelle CI et la revue ne sont pas terminées.
 
 Références :
 - https://f-droid.org/docs/Submitting_to_F-Droid_Quick_Start_Guide/

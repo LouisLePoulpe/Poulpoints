@@ -9,27 +9,52 @@ AutoName: Poulpoints
 
 RepoType: git
 Repo: https://github.com/LouisLePoulpe/Poulpoints.git
+Binaries: https://github.com/LouisLePoulpe/Poulpoints/releases/download/v%v/Poulpoints_v%v_Android_ARM64.apk
 
 Builds:
-  - versionName: 0.8.0
-    versionCode: 21
-    commit: 949a4efc02d4778a11a5e695cc1074da0316d0af
+  - versionName: 0.8.1
+    versionCode: 22
+    commit: fb0dce0536e8c7872114a6eab167f8886b5e1f6f
+    submodules: true
     output: build/app/outputs/flutter-apk/app-release.apk
-    srclibs:
-      - flutter@abaf9c523780a608bd46686fd5e53740a07077f8
     prebuild:
-      - export PUB_CACHE=$(pwd)/.pub-cache
-      - $$flutter$$/bin/flutter config --no-analytics
-      - $$flutter$$/bin/flutter pub get --enforce-lockfile
+      - export original=$PWD repo=/tmp/poulpoints-fdroid-build/source
+      - mkdir -m 700 /tmp/poulpoints-fdroid-build
+      - mv "$original" "$repo"
+      - cd "$repo"
+      - export PUB_CACHE=/tmp/poulpoints-fdroid-build/pub-cache
+      - git -C vendor/flutter fetch --depth 1 origin tag 3.47.7
+      - vendor/flutter/bin/flutter config --no-analytics
+      - vendor/flutter/bin/flutter pub get --enforce-lockfile
+      - mv "$PUB_CACHE" .pub-cache
+      - cd "$(dirname "$original")"
+      - mv "$repo" "$original"
+      - rmdir /tmp/poulpoints-fdroid-build
+      - cd "$original"
+    scanignore:
+      - vendor/flutter/bin/cache
     scandelete:
+      - vendor/flutter
       - .pub-cache
     build:
-      - export PUB_CACHE=$(pwd)/.pub-cache
+      - export original=$PWD repo=/tmp/poulpoints-fdroid-build/source
+      - mkdir -m 700 /tmp/poulpoints-fdroid-build
+      - mv "$original" "$repo"
+      - cd "$repo"
+      - export PUB_CACHE=/tmp/poulpoints-fdroid-build/pub-cache
+      - mv .pub-cache "$PUB_CACHE"
       - unset POULPOINTS_TEST_SIGNING POULPOINTS_SIGNING_PROPERTIES
-      - $$flutter$$/bin/flutter build apk --release --target-platform android-arm64
+      - vendor/flutter/bin/flutter build apk --release --target-platform android-arm64
+      - mv "$PUB_CACHE" .pub-cache
+      - cd "$(dirname "$original")"
+      - mv "$repo" "$original"
+      - rmdir /tmp/poulpoints-fdroid-build
+      - cd "$original"
+
+AllowedAPKSigningKeys: 90de77778ee013f9a66c8fa9a64dda1b9a5c7b25e8c779b997a46fe1385d2857
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9]+\.[0-9]+\.[0-9]+$
 UpdateCheckData: pubspec.yaml|version:\s.+\+(\d+)|.|version:\s(.+)\+
-CurrentVersion: 0.8.0
-CurrentVersionCode: 21
+CurrentVersion: 0.8.1
+CurrentVersionCode: 22
