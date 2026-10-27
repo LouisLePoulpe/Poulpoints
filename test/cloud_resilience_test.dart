@@ -33,6 +33,12 @@ class MemoryVault implements SessionStore {
   }
 }
 
+class UnsupportedVault extends MemoryVault {
+  @override
+  Future<void> write(Map<String, dynamic> session) async =>
+      throw UnsupportedError("No persistent browser storage");
+}
+
 class FakeServer extends SupabaseCloud {
   FakeServer()
     : super(
@@ -77,6 +83,77 @@ class FakeServer extends SupabaseCloud {
 }
 
 void main() {
+  test('Unsupported persistence keeps a temporary session usable', () async {
+    final cloud = SupabaseCloud(
+      url: 'https://test.supabase.co',
+      publicKey: 'public',
+      sessionStore: UnsupportedVault(),
+      httpClient: MockClient(
+        (r) async => r.url.path == '/auth/v1/token'
+            ? http.Response(
+                jsonEncode({
+                  'access_token': 'access',
+                  'refresh_token': 'refresh',
+                  'expires_in': 3600,
+                  'user': {'id': 'user'},
+                }),
+                200,
+              )
+            : http.Response('[{"app_id":"poulpoints"}]', 200),
+      ),
+    );
+    await cloud.signIn('test@example.org', 'password');
+    await expectLater(cloud.rememberSession(), throwsUnsupportedError);
+    await cloud.checkAccess();
+    expect(cloud.signedIn, isTrue);
+    cloud.dispose();
+  });
+
+  test(
+    'Initial locked wallet is retried and session survives a new client',
+    () async {
+      final vault = MemoryVault()..failWrites = true;
+      final client = MockClient((r) async {
+        if (r.url.path == '/auth/v1/token') {
+          return http.Response(
+            jsonEncode({
+              'access_token': 'access',
+              'refresh_token': 'refresh',
+              'expires_in': 3600,
+              'user': {'id': 'user'},
+            }),
+            200,
+          );
+        }
+        return http.Response('[{"app_id":"poulpoints"}]', 200);
+      });
+      final cloud = SupabaseCloud(
+        url: 'https://test.supabase.co',
+        publicKey: 'public',
+        httpClient: client,
+        sessionStore: vault,
+      );
+      await cloud.signIn('test@example.org', 'password');
+      await expectLater(cloud.rememberSession(), throwsStateError);
+      expect(vault.value, isNull);
+      vault.failWrites = false;
+      await cloud.checkAccess();
+      expect(vault.value!['refreshToken'], 'refresh');
+      final restarted = SupabaseCloud(
+        url: 'https://test.supabase.co',
+        publicKey: 'public',
+        httpClient: client,
+        sessionStore: vault,
+      );
+      restarted.restoreSession((await vault.read())!);
+      await restarted.checkAccess();
+      expect(restarted.signedIn, isTrue);
+      await restarted.forgetSession();
+      expect(vault.value, isNull);
+      restarted.dispose();
+    },
+  );
+
   test(
     'Two devices exchange edits and deletions without resurrection',
     () async {

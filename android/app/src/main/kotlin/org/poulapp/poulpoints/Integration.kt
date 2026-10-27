@@ -69,7 +69,26 @@ object Integration {
             if (current == null || times(current) != times(task))
                 c.getSystemService(NotificationManager::class.java).cancel(task.getString("id"),0)
         }
-        if (!prefs(c).edit().putString("snapshot",data.toString()).remove("widgetError").commit()) throw IllegalStateException("Storage failed")
+        // Newly-created or newly-scheduled reminders already in the past
+        // should not appear as fresh notifications. Preserve the 24-hour
+        // recovery window for reminders already registered on this device.
+        val now = System.currentTimeMillis()
+        val oldById = (0 until old.length()).associate { old.getJSONObject(it).getString("id") to old.getJSONObject(it) }
+        val delivered = prefs(c).getStringSet("delivered", emptySet())!!.toMutableSet()
+        for (n in 0 until next.length()) {
+            val task = next.getJSONObject(n)
+            val previousTimes = oldById[task.getString("id")]?.let { times(it) } ?: emptyList()
+            for (at in times(task)) {
+                if (at < now && at !in previousTimes) delivered.add("${task.getString("id")}:$at")
+            }
+        }
+        val activeKeys = mutableSetOf<String>()
+        for (i in 0 until next.length()) {
+            val task = next.getJSONObject(i)
+            for (at in times(task)) activeKeys.add("${task.getString("id")}:$at")
+        }
+        delivered.retainAll(activeKeys)
+        if (!prefs(c).edit().putString("snapshot",data.toString()).putStringSet("delivered",delivered).remove("widgetError").commit()) throw IllegalStateException("Storage failed")
         schedule(c)
         PoulpointsWidget.refresh(c)
     }

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.plasma5support as Plasma5Support
 
@@ -10,6 +11,42 @@ PlasmoidItem {
     property var tasks: []
     property string selectedList: ""
     property var lists: ["Toutes les listes"]
+    property double nowMs: Date.now()
+
+    function isOverdue(task) {
+        // La projection Flutter ne contient que les tâches non terminées.
+        // Les échéances sont enregistrées en millisecondes Unix.
+        return task && typeof task.due === "number" && isFinite(task.due) && task.due < root.nowMs
+    }
+    function overdueLabel(task) {
+        if (!root.isOverdue(task)) return ""
+        const due = new Date(task.due)
+        const now = new Date(root.nowMs)
+        // Comparer les jours calendaires locaux via UTC pour ignorer les jours
+        // de 23 ou 25 heures au changement d’heure.
+        const dueDay = Date.UTC(due.getFullYear(), due.getMonth(), due.getDate())
+        const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
+        const days = Math.round((today - dueDay) / 86400000)
+        return days <= 0 ? "En retard" : "J+" + days
+    }
+    function overdueCount() {
+        return root.tasks.filter(t => (root.selectedList === "" || t.list === root.selectedList) && root.isOverdue(t)).length
+    }
+    function visibleTasks() {
+        const filtered = root.selectedList === "" ? root.tasks : root.tasks.filter(t => t.list === root.selectedList)
+        // Prioriser les tâches en retard sans modifier l’ordre des autres.
+        return filtered.map((task, index) => ({task: task, index: index}))
+            .sort((a, b) => {
+                const firstLate = root.isOverdue(a.task)
+                const secondLate = root.isOverdue(b.task)
+                return firstLate === secondLate ? a.index - b.index : (firstLate ? -1 : 1)
+            }).map(entry => entry.task)
+    }
+    function dueText(task) {
+        if (typeof task.due !== "number" || !isFinite(task.due)) return task.list
+        const format = task.hasDueTime ? "dd/MM/yyyy hh:mm" : "dd/MM/yyyy"
+        return task.list + " · " + new Date(task.due).toLocaleString(Qt.locale(), format)
+    }
     property string status: "Chargement…"
     property string baseCommand: "python3 \"${XDG_DATA_HOME:-$HOME/.local/share}/poulpoints-desktop/helper.py\" "
     function run(operation) { executable.connectSource(baseCommand + operation) }
@@ -33,6 +70,7 @@ PlasmoidItem {
         }
     }
     Timer { interval: 5000; running: true; repeat: true; triggeredOnStart: true; onTriggered: root.run("read") }
+    Timer { interval: 60000; running: true; repeat: true; onTriggered: root.nowMs = Date.now() }
     fullRepresentation: ColumnLayout {
         Layout.minimumWidth: 270
         Layout.minimumHeight: 260
@@ -45,6 +83,14 @@ PlasmoidItem {
             ToolButton { text: "↗"; Accessible.name: "Ouvrir Poulpoints"; onClicked: root.run("open") }
         }
         Label { text: root.status; wrapMode: Text.Wrap; Layout.fillWidth: true; font.pointSize: 9 }
+        Label {
+            visible: root.overdueCount() > 0
+            text: "⚠ " + root.overdueCount() + " tâche(s) en retard"
+            color: Kirigami.Theme.negativeTextColor
+            font.bold: true
+            font.pointSize: 9
+            Layout.fillWidth: true
+        }
         ComboBox {
             Layout.fillWidth: true
             model: root.lists
@@ -56,13 +102,24 @@ PlasmoidItem {
             Layout.fillHeight: true
             clip: true
             ListView {
-                model: root.selectedList === "" ? root.tasks : root.tasks.filter(t => t.list === root.selectedList)
+                model: root.visibleTasks()
                 spacing: 12
                 delegate: Item {
                     id: taskRow
                     required property var modelData
+                    readonly property bool overdue: root.isOverdue(modelData)
+                    readonly property string overdueTag: root.overdueLabel(modelData)
                     width: ListView.view.width
-                    height: Math.max(44, taskInfo.implicitHeight + 12)
+                    height: Math.max(50, taskInfo.implicitHeight + 12)
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: 4
+                        radius: 2
+                        visible: taskRow.overdue
+                        color: Kirigami.Theme.negativeTextColor
+                    }
                     ToolButton {
                         id: completeButton
                         anchors.left: parent.left
@@ -81,18 +138,39 @@ PlasmoidItem {
                         anchors.topMargin: 6
                         anchors.rightMargin: 6
                         spacing: 2
-                        Label {
+                        Row {
                             width: parent.width
-                            text: taskRow.modelData.title
-                            textFormat: Text.PlainText
-                            elide: Text.ElideRight
+                            spacing: 6
+                            Label {
+                                width: Math.max(0, parent.width - (lateBadge.visible ? lateBadge.width + parent.spacing : 0))
+                                text: taskRow.modelData.title
+                                textFormat: Text.PlainText
+                                elide: Text.ElideRight
+                            }
+                            Rectangle {
+                                id: lateBadge
+                                visible: taskRow.overdue
+                                width: visible ? lateLabel.implicitWidth + 12 : 0
+                                height: 21
+                                radius: 6
+                                color: Qt.rgba(1.0, 0.22, 0.22, 0.16)
+                                Label {
+                                    id: lateLabel
+                                    anchors.centerIn: parent
+                                    text: taskRow.overdueTag
+                                    color: Kirigami.Theme.negativeTextColor
+                                    font.bold: true
+                                    font.pointSize: 9
+                                }
+                            }
                         }
                         Label {
                             width: parent.width
-                            text: taskRow.modelData.list + (taskRow.modelData.due ? " · " + new Date(taskRow.modelData.due).toLocaleString(Qt.locale(), "dd/MM hh:mm") : "")
+                            text: root.dueText(taskRow.modelData)
                             textFormat: Text.PlainText
                             font.pointSize: 9
-                            opacity: 0.75
+                            color: taskRow.overdue ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.textColor
+                            opacity: taskRow.overdue ? 1.0 : 0.75
                             elide: Text.ElideRight
                         }
                     }
@@ -112,7 +190,7 @@ PlasmoidItem {
                         anchors.bottom: parent.bottom
                         anchors.bottomMargin: -6
                         height: 1
-                        color: taskInfo.children[0].color
+                        color: Kirigami.Theme.textColor
                         opacity: 0.12
                     }
                 }

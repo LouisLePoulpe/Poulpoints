@@ -1,0 +1,1 @@
+Fix Linux session persistence after restart. Retry secure storage when KDE Wallet becomes available. Preserve the 0.8.3 task and widget improvements.

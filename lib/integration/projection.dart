@@ -20,8 +20,9 @@ Map<String, dynamic> projectTasks(List<Task> tasks) {
           'list': t.list,
           'revision': t.updatedAt.toString(),
           'due': t.dueDate?.millisecondsSinceEpoch,
+          'hasDueTime': t.hasDueTime,
           'remindAts': {
-            if (t.dueDate != null && t.hasDueTime)
+            if (t.dueDate != null)
               for (final minutes in t.reminders)
                 t.dueDate!
                     .subtract(Duration(minutes: minutes))
@@ -29,7 +30,7 @@ Map<String, dynamic> projectTasks(List<Task> tasks) {
             if (t.snoozedUntil != null) t.snoozedUntil!.millisecondsSinceEpoch,
           }.toList()..sort(),
           'remindAt':
-              t.dueDate != null && t.hasDueTime && t.reminders.isNotEmpty
+              t.dueDate != null && t.reminders.isNotEmpty
               ? t.dueDate!
                     .subtract(Duration(minutes: t.reminders.first))
                     .millisecondsSinceEpoch

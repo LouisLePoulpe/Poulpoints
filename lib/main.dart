@@ -12,6 +12,9 @@ import 'cloud/session_store.dart';
 import 'task_editor.dart';
 import 'task_actions.dart' show moveOccurrence;
 import 'models.dart';
+import 'deadline_status.dart';
+import 'app_metadata.dart';
+import 'default_project.dart';
 import 'integration/platform_bridge.dart';
 import 'integration/projection.dart';
 import 'integration/runtime.dart';
@@ -153,6 +156,8 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
   String _cloudUrl = '';
   String _cloudPublicKey = '';
   String _cloudStatus = 'Non connecté';
+  static const _defaultProjectKey = 'poulpoints_default_project_v1';
+  String? _defaultProject;
   static const _syncUrlKey = 'poulpoints_sync_url_v3';
   static const _syncTokenKey = 'poulpoints_sync_token_v3';
   final Map<String, int> _deletions = {};
@@ -363,6 +368,13 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
     // The Linux resident remains active while its window is hidden.
     // Local edits are pushed much sooner (debounced in _save).
     _cloudPeriodicTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      // Ensure an open task list crosses its due time without user input.
+      if (mounted &&
+          _cloudInForeground &&
+          _loaded &&
+          _tasks.any((task) => !task.done && task.dueDate != null)) {
+        setState(() {});
+      }
       if (_desktopResident && _loaded && _cloud == null) {
         // The session vault may only become available after desktop login.
         _restoreCloudSession();
@@ -383,6 +395,7 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _cloudInForeground = true;
+      if (_loaded && _cloud == null) unawaited(_restoreCloudSession());
       _readWidgetCommands();
       _scheduleCloudSync(delay: const Duration(milliseconds: 600));
     } else if (state == AppLifecycleState.paused ||
@@ -440,6 +453,7 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
       if (!mounted) return;
       setState(() {
         _apply(data);
+        _defaultProject = prefs.getString(_defaultProjectKey);
         _syncUrl = prefs.getString(_syncUrlKey) ?? '';
         _syncToken = prefs.getString(_syncTokenKey) ?? '';
         _cloudUrl = prefs.getString(_cloudUrlKey) ?? '';
@@ -569,12 +583,19 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
     return checkpoint;
   }
 
+  bool _restoringCloudSession = false;
   Future<void> _restoreCloudSession() async {
-    if (_cloudUrl.isEmpty || _cloudPublicKey.isEmpty) return;
+    if (_cloudUrl.isEmpty ||
+        _cloudPublicKey.isEmpty ||
+        _cloud != null ||
+        _restoringCloudSession) {
+      return;
+    }
+    _restoringCloudSession = true;
     SupabaseCloud? restored;
     try {
       final saved = await _sessionStore.read();
-      if (saved == null || !mounted) return;
+      if (saved == null || !mounted || _cloud != null) return;
       restored = SupabaseCloud(
         url: _cloudUrl,
         publicKey: _cloudPublicKey,
@@ -582,7 +603,7 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
       );
       restored.restoreSession(saved);
       await _readCloudBaseline(await SharedPreferences.getInstance(), restored);
-      if (!mounted) {
+      if (!mounted || _cloud != null) {
         restored.dispose();
         return;
       }
@@ -594,12 +615,15 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
       _scheduleCloudSync(delay: const Duration(milliseconds: 400));
     } catch (_) {
       restored?.dispose();
-      if (mounted) {
+      if (mounted && _cloud == null) {
         setState(
-          () => _cloudStatus =
-              'Session non restaurée : reconnectez-vous. Vérifiez que le coffre-fort du système est déverrouillé.',
+          () => _cloudStatus = _desktopResident
+              ? 'Connexion en attente du coffre-fort Linux. Activez et déverrouillez KWallet ; Poulpoints réessaiera automatiquement.'
+              : 'Coffre-fort indisponible. La connexion sera restaurée dès son déverrouillage.',
         );
       }
+    } finally {
+      _restoringCloudSession = false;
     }
   }
 
@@ -658,7 +682,7 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
         _cloudRetryAfter = null;
         _cloudSyncQueued = false;
         _cloudStatus = !remembered
-            ? 'Connecté pour cette ouverture seulement : coffre-fort indisponible.'
+            ? 'Coffre-fort indisponible : conservation de la connexion en attente, nouvelle tentative automatique.'
             : existingBaseline == null
             ? 'Connecté — première synchronisation automatique…'
             : 'Connecté — synchronisation automatique active';
@@ -1099,7 +1123,11 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
     final editor = TaskEditor(
       existing: existing,
       lists: lists,
-      initialList: lists.contains(_selection) ? _selection : lists.first,
+      initialList: resolveInitialProject(
+        lists,
+        selectedProject: _projects.contains(_selection) ? _selection : null,
+        preferredProject: _defaultProject,
+      ),
       fullScreen: useFullScreen,
     );
     _editorOpen = true;
@@ -1216,8 +1244,13 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
       _projects.remove(name);
       if (!_projects.contains(target)) _projects.add(target);
       if (_selection == name) _selection = target;
+      if (_defaultProject == name) _defaultProject = target;
     });
-    await _save();
+    final saved = await _save();
+    if (saved && _defaultProject == target) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_defaultProjectKey, target);
+    }
   }
 
   Future<void> _moveOccurrence(Task task) async {
@@ -1387,6 +1420,13 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
               ),
             if (task.dueDate != null)
               Chip(label: Text(formatDeadline(task.dueDate!, task.hasDueTime))),
+            if (overdueLabel(task, DateTime.now()) case final label?)
+              Chip(
+                avatar: const Icon(Icons.warning_amber_rounded, size: 18),
+                label: Text('En retard : $label'),
+                backgroundColor: colors.errorContainer,
+                labelStyle: TextStyle(color: colors.onErrorContainer),
+              ),
           ],
         ),
         if (!task.done)
@@ -1663,12 +1703,73 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _changeDefaultProject(String project) async {
+    if (!_projects.contains(project)) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = await prefs.setString(_defaultProjectKey, project);
+      if (mounted && saved) setState(() => _defaultProject = project);
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Projet par défaut non enregistré : $error')),
+        );
+      }
+    }
+  }
+
+  Future<void> _chooseDefaultProject() async {
+    if (_projects.isEmpty) return;
+    final chosen = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Choisir le projet par défaut'),
+        children: [
+          for (final project in _projects)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, project),
+              child: Row(
+                children: [
+                  Icon(
+                    resolveInitialProject(
+                              _projects,
+                              preferredProject: _defaultProject,
+                            ) ==
+                            project
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_unchecked,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(project)),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+    if (chosen != null && mounted) await _changeDefaultProject(chosen);
+  }
+
   Widget _settingsContent() {
     final connected = _cloud?.signedIn == true;
     final colors = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.only(top: 16, bottom: 100),
       children: [
+        _settingsGroup('À propos', [
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Poulpoints'),
+            subtitle: const Text(
+              'Version $poulpointsVersion (build $poulpointsBuild)',
+            ),
+          ),
+          const ListTile(
+            leading: Icon(Icons.code),
+            title: Text('Poulapp · logiciel libre'),
+            subtitle: Text('Licence MIT'),
+          ),
+        ]),
         _settingsGroup('Poulapp Cloud', [
           ListTile(
             leading: Icon(
@@ -1762,6 +1863,19 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
             title: const Text('Configurer l’ancien serveur'),
             enabled: !connected,
             onTap: connected ? null : _syncSettings,
+          ),
+        ]),
+        _settingsGroup('Organisation', [
+          ListTile(
+            leading: const Icon(Icons.folder_outlined),
+            title: const Text('Projet par défaut'),
+            subtitle: Text(
+              'Actuel : ${resolveInitialProject(_projects, preferredProject: _defaultProject)}. '
+              'Utilisé pour les tâches créées depuis les vues générales.',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            enabled: _projects.isNotEmpty,
+            onTap: _projects.isEmpty ? null : _chooseDefaultProject,
           ),
         ]),
         _settingsGroup('Apparence', [
@@ -2004,94 +2118,152 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
                         itemBuilder: (context, index) {
                           final task = _visibleTasks[index];
                           final due = task.dueDate;
+                          final overdue = overdueLabel(task, DateTime.now());
                           return Card(
                             margin: const EdgeInsets.only(bottom: 10),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 5,
-                              ),
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: task.done,
-                                    onChanged: (v) =>
-                                        _change(completeTask(task, v ?? false)),
+                            clipBehavior: Clip.antiAlias,
+                            child: Row(
+                              children: [
+                                if (overdue != null)
+                                  Container(
+                                    width: 4,
+                                    height: 72,
+                                    color: colors.error,
                                   ),
-                                  Expanded(
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(12),
-                                      onTap: () => isWide
-                                          ? setState(() => _selectedTask = task)
-                                          : _showTaskDetails(task),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                          horizontal: 4,
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 5,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Checkbox(
+                                          value: task.done,
+                                          onChanged: (v) => _change(
+                                            completeTask(task, v ?? false),
+                                          ),
                                         ),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              task.title,
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                decoration: task.done
-                                                    ? TextDecoration.lineThrough
-                                                    : null,
+                                        Expanded(
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            onTap: () => isWide
+                                                ? setState(
+                                                    () => _selectedTask = task,
+                                                  )
+                                                : _showTaskDetails(task),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                    horizontal: 4,
+                                                  ),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Text(
+                                                          task.title,
+                                                          style: TextStyle(
+                                                            fontSize: 16,
+                                                            decoration:
+                                                                task.done
+                                                                ? TextDecoration
+                                                                      .lineThrough
+                                                                : null,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (overdue != null)
+                                                        Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                left: 6,
+                                                              ),
+                                                          child: Tooltip(
+                                                            message:
+                                                                'Échéance dépassée',
+                                                            child: Text(
+                                                              overdue,
+                                                              key: ValueKey(
+                                                                'overdue-${task.id}',
+                                                              ),
+                                                              style: TextStyle(
+                                                                color: colors
+                                                                    .error,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                fontSize: 12,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    '${task.list}${due == null ? '' : '  •  ${formatDeadline(due, task.hasDueTime)}'}${task.subtasks.isEmpty ? '' : '  •  ${task.subtasks.where((s) => s.done).length}/${task.subtasks.length} sous-tâches'}',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: overdue != null
+                                                          ? colors.error
+                                                          : colors
+                                                                .onSurfaceVariant,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${task.list}${due == null ? '' : '  •  ${formatDeadline(due, task.hasDueTime)}'}${task.subtasks.isEmpty ? '' : '  •  ${task.subtasks.where((s) => s.done).length}/${task.subtasks.length} sous-tâches'}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: colors.onSurfaceVariant,
-                                              ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          tooltip: 'Marquer comme importante',
+                                          icon: Icon(
+                                            task.priority
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            color: task.priority
+                                                ? colors.primary
+                                                : null,
+                                          ),
+                                          onPressed: () => _change(
+                                            task.copyWith(
+                                              priority: !task.priority,
+                                            ),
+                                          ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          tooltip: 'Options',
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              _openEditor(task);
+                                            }
+                                            if (value == 'delete') {
+                                              _delete(task);
+                                            }
+                                          },
+                                          itemBuilder: (context) => const [
+                                            PopupMenuItem(
+                                              value: 'edit',
+                                              child: Text('Modifier'),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'delete',
+                                              child: Text('Supprimer'),
                                             ),
                                           ],
                                         ),
-                                      ),
+                                      ],
                                     ),
                                   ),
-                                  IconButton(
-                                    tooltip: 'Marquer comme importante',
-                                    icon: Icon(
-                                      task.priority
-                                          ? Icons.star
-                                          : Icons.star_border,
-                                      color: task.priority
-                                          ? colors.primary
-                                          : null,
-                                    ),
-                                    onPressed: () => _change(
-                                      task.copyWith(priority: !task.priority),
-                                    ),
-                                  ),
-                                  PopupMenuButton<String>(
-                                    tooltip: 'Options',
-                                    onSelected: (value) {
-                                      if (value == 'edit') {
-                                        _openEditor(task);
-                                      }
-                                      if (value == 'delete') {
-                                        _delete(task);
-                                      }
-                                    },
-                                    itemBuilder: (context) => const [
-                                      PopupMenuItem(
-                                        value: 'edit',
-                                        child: Text('Modifier'),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: Text('Supprimer'),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           );
                         },

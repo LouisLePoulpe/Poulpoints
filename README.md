@@ -12,9 +12,9 @@ Tâches et sous-tâches, projets, priorités, échéances datées et horaires, l
 
 La suppression d’un projet transfère ses tâches. Les exceptions de récurrence concernent l’occurrence courante. La résolution d’un conflit choisit une version complète de la tâche.
 
-## Version 0.8.1
+## Version 0.8.5
 
-Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Navigation directe depuis les widgets. Application Android : versionCode 22.
+Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Navigation directe depuis les widgets. Application Android : versionCode 26.
 
 - [Installation](distribution/INSTALL_PUBLIC.md)
 - [Compilation et signature](distribution/RELEASE.md)
@@ -39,6 +39,8 @@ bash tool/build_android.sh unsigned
 Les builds Android sont non signés par défaut. La signature de production est fournie dans un fichier privé externe. Ne jamais publier de clé ni de mot de passe. Les APK d’essai et de production ont des certificats différents : une mise à jour directe entre eux n’est pas possible.
 
 ## Cloud
+
+Correctif Linux 0.8.5 : activation du service sécurisé KDE et nouvelle tentative de conservation/restauration après indisponibilité temporaire du coffre-fort. Voir [Connexion persistante sous Linux](distribution/LINUX_SESSION.md).
 
 Un serveur compatible Supabase peut être configuré dans l’application. Les migrations SQL sont dans supabase/migrations. Désactiver l’inscription publique et gérer explicitement les invitations et autorisations. Les migrations ne constituent pas une procédure complète d’exploitation du serveur.
 

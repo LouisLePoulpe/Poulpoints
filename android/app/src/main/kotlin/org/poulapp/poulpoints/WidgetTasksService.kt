@@ -5,6 +5,10 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
+import java.util.Calendar
+import java.util.TimeZone
+import java.util.concurrent.TimeUnit
 import android.os.Build
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
@@ -22,12 +26,45 @@ object WidgetTasks {
             (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0)
         return PendingIntent.getBroadcast(c, widget, intent, flags)
     }
+    /** Number of local calendar days overdue; resilient to 23/25-hour DST days. */
+    internal fun overdueDays(dueMillis: Long, nowMillis: Long): Int? {
+        if (dueMillis >= nowMillis) return null
+        fun epochDay(millis: Long): Long {
+            val local = Calendar.getInstance().apply { timeInMillis = millis }
+            val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                clear()
+                set(local.get(Calendar.YEAR), local.get(Calendar.MONTH), local.get(Calendar.DAY_OF_MONTH))
+            }
+            return TimeUnit.MILLISECONDS.toDays(utc.timeInMillis)
+        }
+        return (epochDay(nowMillis) - epochDay(dueMillis)).toInt().coerceAtLeast(0)
+    }
     fun row(c: Context, task: JSONObject): RemoteViews {
         val row = RemoteViews(c.packageName, R.layout.poulpoints_widget_row)
         row.setTextViewText(R.id.task_title, task.getString("title"))
-        val due = if (task.isNull("due")) "" else " · " + java.text.DateFormat.getDateTimeInstance(
-            java.text.DateFormat.SHORT, java.text.DateFormat.SHORT).format(java.util.Date(task.getLong("due")))
+        val due = if (task.isNull("due")) "" else " · " +
+            (if (task.optBoolean("hasDueTime", true))
+                java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
+             else java.text.DateFormat.getDateInstance(java.text.DateFormat.SHORT))
+                .format(java.util.Date(task.getLong("due")))
         row.setTextViewText(R.id.task_detail, task.getString("list") + due)
+        val overdue = if (task.isNull("due")) null else overdueDays(task.getLong("due"), System.currentTimeMillis())
+        if (overdue != null) {
+            row.setViewVisibility(R.id.task_overdue_bar, View.VISIBLE)
+            row.setViewVisibility(R.id.task_overdue_label, View.VISIBLE)
+            row.setTextViewText(R.id.task_overdue_label, if (overdue == 0) "!" else "J+$overdue")
+            row.setTextColor(R.id.task_detail, c.getColor(R.color.widget_overdue))
+            row.setContentDescription(R.id.task_overdue_label, if (overdue == 0) "En retard" else "En retard de $overdue jour(s)")
+        } else {
+            // Android peut réutiliser une RemoteViews d'une tâche en retard.
+            // Réinitialiser explicitement la couleur pour ne pas laisser la date
+            // d'une tâche future affichée en rouge (bug constaté sur Pixel).
+            row.setTextColor(R.id.task_detail, c.getColor(R.color.widget_secondary))
+            row.setViewVisibility(R.id.task_overdue_bar, View.GONE)
+            row.setViewVisibility(R.id.task_overdue_label, View.GONE)
+            row.setTextViewText(R.id.task_overdue_label, "")
+            row.setContentDescription(R.id.task_overdue_label, "")
+        }
         row.setOnClickFillInIntent(R.id.task_done, Intent().putExtra("operation", "complete")
             .putExtra("id", task.getString("id"))
             .putExtra("revision", task.getString("revision")))

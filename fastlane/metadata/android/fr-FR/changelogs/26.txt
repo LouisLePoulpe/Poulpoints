@@ -1,0 +1,1 @@
+Correction de la conservation de la connexion Linux après redémarrage. Reprise automatique après indisponibilité temporaire du coffre-fort KDE. Conservation des améliorations de la 0.8.3.

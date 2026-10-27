@@ -12,13 +12,13 @@ mkdir -p "$ROOT" "$CONFIG/systemd/user"
 chmod 700 "$ROOT"
 cp "$HERE/helper.py" "$ROOT/helper.py"
 cp "$HERE/org.poulapp.poulpoints/contents/ui/logo.png" "$ROOT/logo.png"
-mkdir -p "$ROOT/app-0.8.1"
-cp -a "$BUNDLE/." "$ROOT/app-0.8.1/"
+mkdir -p "$ROOT/app-0.8.5"
+cp -a "$BUNDLE/." "$ROOT/app-0.8.5/"
 cat > "$ROOT/launch.sh" <<'LAUNCH'
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="${XDG_DATA_HOME:-$HOME/.local/share}/poulpoints-desktop"
-exec distrobox enter poulpoints-dev -- "$ROOT/app-0.8.1/poulpoints" "$@"
+exec distrobox enter poulpoints-dev -- "$ROOT/app-0.8.5/poulpoints" "$@"
 LAUNCH
 chmod 700 "$ROOT/launch.sh"
 if kpackagetool6 --type Plasma/Applet --show org.poulapp.poulpoints >/dev/null 2>&1; then

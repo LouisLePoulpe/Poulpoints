@@ -114,6 +114,49 @@ class IntegrationTest {
         assertEquals("a",intent.getStringExtra("id"))
         assertEquals(Integration.actionKey(app),intent.getStringExtra("authorization"))
     }
+    @Test fun widgetOverdueUsesLocalCalendarDays() {
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(2027, java.util.Calendar.MARCH, 28, 13, 0, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val now = calendar.timeInMillis
+        val today = (calendar.clone() as java.util.Calendar).apply { set(java.util.Calendar.HOUR_OF_DAY, 10) }.timeInMillis
+        val yesterday = (calendar.clone() as java.util.Calendar).apply { add(java.util.Calendar.DATE, -1) }.timeInMillis
+        assertEquals(0, WidgetTasks.overdueDays(today, now))
+        assertEquals(1, WidgetTasks.overdueDays(yesterday, now))
+        assertNull(WidgetTasks.overdueDays(now + 1000, now))
+    }
+    @Test @Config(qualifiers = "night") fun futureTaskResetsColorAfterOverdueRowIsRecycled() {
+        val now = System.currentTimeMillis()
+        val old = JSONObject().put("id", "late").put("revision", "1")
+            .put("title", "En retard").put("list", "Personnel")
+            .put("due", now - 3L * 86400000L).put("hasDueTime", false)
+        val upcoming = JSONObject().put("id", "future").put("revision", "2")
+            .put("title", "À venir").put("list", "Personnel")
+            .put("due", now + 3L * 86400000L).put("hasDueTime", true)
+
+        // Android réemploie parfois la même vue entre deux lignes du widget.
+        val parent = android.appwidget.AppWidgetHostView(app)
+        val root = WidgetTasks.row(app, old).apply(app, parent)
+        val detail = root.findViewById<TextView>(R.id.task_detail)
+        assertEquals(app.getColor(R.color.widget_overdue), detail.currentTextColor)
+        assertEquals(android.view.View.VISIBLE, root.findViewById<android.view.View>(R.id.task_overdue_bar).visibility)
+
+        WidgetTasks.row(app, upcoming).reapply(app, root)
+        assertEquals("Personnel", detail.text.toString().substringBefore(" · "))
+        assertEquals(app.getColor(R.color.widget_secondary), detail.currentTextColor)
+        assertEquals(android.view.View.GONE, root.findViewById<android.view.View>(R.id.task_overdue_bar).visibility)
+        assertEquals(android.view.View.GONE, root.findViewById<android.view.View>(R.id.task_overdue_label).visibility)
+    }
+
+    @Test fun creatingPastReminderDoesNotNotifyImmediately() {
+        val past = System.currentTimeMillis() - 60000
+        Integration.publish(app, data(past))
+        assertEquals(0, shadowOf(app.getSystemService(AlarmManager::class.java)).scheduledAlarms.size)
+        // The snapshot still contains this reminder, so it remains visible
+        // in task details and keeps its cloud/local state.
+        assertEquals(past, Integration.times(Integration.snapshot(app).getJSONArray("tasks").getJSONObject(0)).single())
+    }
     @Test fun widgetKeepsAllRowsWhenResized() {
         val data = data()
         val tasks = data.getJSONArray("tasks")

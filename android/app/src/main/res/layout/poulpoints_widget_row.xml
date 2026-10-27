@@ -1,7 +1,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="48dp" android:gravity="center_vertical">
- <TextView android:id="@+id/task_done" android:layout_width="48dp" android:layout_height="match_parent" android:gravity="center" android:text="○" android:textSize="26sp" android:textColor="@color/widget_accent" android:contentDescription="Terminer cette tâche dans Poulpoints"/>
+ <TextView android:id="@+id/task_overdue_bar" android:layout_width="3dp" android:layout_height="match_parent" android:background="@color/widget_overdue" android:visibility="gone"/>
+ <TextView android:id="@+id/task_done" android:layout_width="44dp" android:layout_height="match_parent" android:gravity="center" android:text="○" android:textSize="26sp" android:textColor="@color/widget_accent" android:contentDescription="Terminer cette tâche"/>
  <LinearLayout android:id="@+id/task_info" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:orientation="vertical">
   <TextView android:id="@+id/task_title" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_text" android:textSize="14sp" android:maxLines="1" android:ellipsize="end"/>
   <TextView android:id="@+id/task_detail" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/widget_secondary" android:textSize="11sp" android:maxLines="1" android:ellipsize="end"/>
  </LinearLayout>
+ <TextView android:id="@+id/task_overdue_label" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="4dp" android:paddingHorizontal="4dp" android:textStyle="bold" android:textColor="@color/widget_overdue" android:textSize="11sp" android:visibility="gone"/>
 </LinearLayout>

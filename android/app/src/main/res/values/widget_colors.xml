@@ -3,4 +3,5 @@
     <color name="widget_text">#153550</color>
     <color name="widget_secondary">#52677B</color>
     <color name="widget_accent">#0878F9</color>
+    <color name="widget_overdue">#D32F2F</color>
 </resources>

@@ -118,9 +118,12 @@ class SupabaseCloud {
   Future<void> rememberSession() async {
     if (!signedIn || sessionStore == null) return;
     _remember = true;
+    // Keep the persistence request after a temporarily unavailable wallet.
+    // The next sync retries the write before sending authenticated requests.
     try {
       await _persist();
-    } catch (_) {
+    } on UnsupportedError {
+      // Browser storage deliberately stays in memory for this release.
       _remember = false;
       rethrow;
     }

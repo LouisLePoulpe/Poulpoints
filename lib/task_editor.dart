@@ -40,6 +40,7 @@ class _TaskEditorState extends State<TaskEditor> {
   late bool hasTime;
   int? reminderMinutes;
   final Set<int> extraReminders = {};
+  bool _remindersManuallyChanged = false;
   late final TextEditingController tags;
   DateTime? due;
   int sequence = 0;
@@ -125,8 +126,8 @@ class _TaskEditorState extends State<TaskEditor> {
             ? rule.next(due!, inclusive: true)
             : due,
         hasDueTime: due != null && hasTime,
-        reminderMinutes: due != null && hasTime ? reminderMinutes : null,
-        reminderOffsets: due != null && hasTime
+        reminderMinutes: due != null ? reminderMinutes : null,
+        reminderOffsets: due != null
             ? ({
                 ...?(reminderMinutes == null ? null : [reminderMinutes!]),
                 ...extraReminders,
@@ -161,15 +162,21 @@ class _TaskEditorState extends State<TaskEditor> {
       lastDate: DateTime(current.year > 2100 ? current.year : 2100, 12, 31),
     );
     if (!mounted || selected == null) return;
-    setState(
-      () => due = DateTime(
+    setState(() {
+      // Do not change reminders on an existing dated task; the user might
+      // deliberately have disabled them. A new deadline defaults to 00:00.
+      if (due == null && !_remindersManuallyChanged &&
+          extraReminders.isEmpty && reminderMinutes == null) {
+        extraReminders.add(0);
+      }
+      due = DateTime(
         selected.year,
         selected.month,
         selected.day,
         hasTime ? current.hour : 0,
         hasTime ? current.minute : 0,
-      ),
-    );
+      );
+    });
   }
 
   Future<void> pickTime() async {
@@ -458,7 +465,7 @@ class _TaskEditorState extends State<TaskEditor> {
         const SizedBox(height: 16),
         const Text('Rappels'),
         const SizedBox(height: 8),
-        if (due != null && hasTime) ...[
+        if (due != null) ...[
           for (final minutes in (extraReminders.toList()..sort()))
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -468,6 +475,7 @@ class _TaskEditorState extends State<TaskEditor> {
                     child: DropdownButtonFormField<int>(
                       key: ValueKey('reminder-row-$minutes'),
                       initialValue: minutes,
+                      isExpanded: true,
                       decoration: const InputDecoration(
                         prefixIcon: Icon(Icons.notifications_outlined),
                       ),
@@ -485,7 +493,8 @@ class _TaskEditorState extends State<TaskEditor> {
                               !extraReminders.contains(value))
                             DropdownMenuItem(
                               value: value,
-                              child: Text(reminderLabel(value)),
+                              child: Text(reminderLabel(value),
+                                  maxLines: 1, overflow: TextOverflow.ellipsis),
                             ),
                       ],
                       onChanged: (value) => setState(() {
@@ -494,6 +503,7 @@ class _TaskEditorState extends State<TaskEditor> {
                           extraReminders.add(value);
                         }
                         reminderMinutes = null;
+                        _remindersManuallyChanged = true;
                       }),
                     ),
                   ),
@@ -503,6 +513,7 @@ class _TaskEditorState extends State<TaskEditor> {
                     onPressed: () => setState(() {
                       extraReminders.remove(minutes);
                       reminderMinutes = null;
+                      _remindersManuallyChanged = true;
                     }),
                   ),
                 ],
@@ -511,7 +522,8 @@ class _TaskEditorState extends State<TaskEditor> {
           if ({0, 5, 15, 30, 60, 1440}.difference(extraReminders).isNotEmpty)
             DropdownButtonFormField<int>(
               key: ValueKey('add-reminder-${extraReminders.join(',')}'),
-              hint: const Text('Ajouter un rappel'),
+              hint: const Text('Ajouter un rappel', overflow: TextOverflow.ellipsis),
+              isExpanded: true,
               decoration: const InputDecoration(
                 prefixIcon: Icon(Icons.add_alarm),
               ),
@@ -520,17 +532,19 @@ class _TaskEditorState extends State<TaskEditor> {
                   if (!extraReminders.contains(value))
                     DropdownMenuItem(
                       value: value,
-                      child: Text(reminderLabel(value)),
+                      child: Text(reminderLabel(value),
+                          maxLines: 1, overflow: TextOverflow.ellipsis),
                     ),
               ],
               onChanged: (value) => setState(() {
                 if (value != null) extraReminders.add(value);
                 reminderMinutes = null;
+                _remindersManuallyChanged = true;
               }),
             ),
         ] else
           const Text(
-            'Choisissez une date et une heure pour ajouter un rappel.',
+            'Choisissez une date pour ajouter un rappel.',
           ),
         const SizedBox(height: 24),
         TextFormField(

@@ -36,9 +36,8 @@ class TaskSnapshot {
           (reminder is! int ||
               reminder < 0 ||
               reminder > 525600 ||
-              item['dueDate'] == null ||
-              item['hasDueTime'] != true)) {
-        throw const FormatException('Rappel invalide : date et heure requises');
+              item['dueDate'] == null)) {
+        throw const FormatException('Rappel invalide : date requise');
       }
       final offsets = item['reminderOffsets'];
       if (offsets != null &&
@@ -46,7 +45,7 @@ class TaskSnapshot {
               offsets.length > 20 ||
               offsets.any((v) => v is! int || v < 0 || v > 525600) ||
               (offsets.isNotEmpty &&
-                  (item['dueDate'] == null || item['hasDueTime'] != true)))) {
+                  item['dueDate'] == null))) {
         throw const FormatException('Liste de rappels invalide');
       }
       final tags = item['tags'];
