@@ -202,12 +202,20 @@ class CloudSync {
     }.toList()..sort();
     for (final id in taskIds) {
       final task = localTasks[id];
-      final localSig = localDeleted.containsKey(id)
+      // Absence and a remote tombstone both mean no task. Repair a missing
+      // local tombstone before planning, including when the checkpoint is old.
+      final remote = remoteTasks[id];
+      if (task == null && remote?.deleted == true) {
+        localDeleted.putIfAbsent(
+          id,
+          () => DateTime.now().toUtc().microsecondsSinceEpoch,
+        );
+      }
+      var localSig = localDeleted.containsKey(id)
           ? '#deleted'
           : task == null
           ? null
           : canonicalJson(task.toJson());
-      final remote = remoteTasks[id];
       final remoteSig = remote?.taskSignature;
       final baseSig = baseline?.tasks[id]?.signature;
       var action = decideChange(localSig, remoteSig, baseSig);
@@ -224,6 +232,12 @@ class CloudSync {
             'Résolution des modifications concurrentes annulée.',
           );
         }
+      }
+      // A planned push of an absent task means deletion (either a local
+      // removal since the checkpoint or the user's explicit conflict choice).
+      if (action == CloudDecision.push && localSig == null) {
+        localSig = '#deleted';
+        localDeleted[id] = DateTime.now().toUtc().microsecondsSinceEpoch;
       }
       switch (action) {
         case CloudDecision.conflict:

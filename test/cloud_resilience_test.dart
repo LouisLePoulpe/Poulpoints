@@ -83,6 +83,99 @@ class FakeServer extends SupabaseCloud {
 }
 
 void main() {
+  for (final checkpoint in ['active', 'deleted', 'none']) {
+    test(
+      'Missing local tombstone converges with $checkpoint checkpoint',
+      () async {
+        final cloud = FakeServer();
+        final first = await CloudSync.synchronize(
+          cloud: cloud,
+          local: snapshot([task('a', 'A')]),
+          baseline: null,
+        );
+        final removed = await CloudSync.synchronize(
+          cloud: cloud,
+          local: snapshot([], {'a': 2}),
+          baseline: first.baseline,
+        );
+        final writes = cloud.writes;
+        final repaired = await CloudSync.synchronize(
+          cloud: cloud,
+          local: snapshot(),
+          baseline: checkpoint == 'active'
+              ? first.baseline
+              : checkpoint == 'deleted'
+              ? removed.baseline
+              : null,
+          resolve: (_) async => fail('Identical absence must not prompt'),
+        );
+        expect(repaired.snapshot.tasks, isEmpty);
+        expect(repaired.snapshot.deleted, contains('a'));
+        final idle = await CloudSync.synchronize(
+          cloud: cloud,
+          local: repaired.snapshot,
+          baseline: repaired.baseline,
+        );
+        expect(idle.snapshot.deleted, contains('a'));
+        expect(cloud.writes, writes);
+      },
+    );
+  }
+  test(
+    'Choosing absent local version deletes changed remote and converges',
+    () async {
+      final cloud = FakeServer();
+      final first = await CloudSync.synchronize(
+        cloud: cloud,
+        local: snapshot([task('a', 'A')]),
+        baseline: null,
+      );
+      await CloudSync.synchronize(
+        cloud: cloud,
+        local: snapshot([task('a', 'Remote edit')]),
+        baseline: first.baseline,
+      );
+      var decisions = 0;
+      final resolved = await CloudSync.synchronize(
+        cloud: cloud,
+        local: snapshot(),
+        baseline: first.baseline,
+        resolve: (conflict) async {
+          decisions++;
+          expect(conflict.local, isNull);
+          expect(conflict.remote, isNotNull);
+          return CloudDecision.push;
+        },
+      );
+      expect(decisions, 1);
+      expect(resolved.snapshot.deleted, contains('a'));
+      expect(cloud.rows['poulpoints_task_records']!['a']!['deleted'], isTrue);
+      await CloudSync.synchronize(
+        cloud: cloud,
+        local: resolved.snapshot,
+        baseline: resolved.baseline,
+      );
+    },
+  );
+  test(
+    'Local removal without tombstone is sent against unchanged checkpoint',
+    () async {
+      final cloud = FakeServer();
+      final first = await CloudSync.synchronize(
+        cloud: cloud,
+        local: snapshot([task('a', 'A')]),
+        baseline: null,
+      );
+      final removed = await CloudSync.synchronize(
+        cloud: cloud,
+        local: snapshot(),
+        baseline: first.baseline,
+      );
+      expect(removed.snapshot.deleted, contains('a'));
+      expect(cloud.rows['poulpoints_task_records']!['a']!['deleted'], isTrue);
+    },
+  );
+
   test('Unsupported persistence keeps a temporary session usable', () async {
     final cloud = SupabaseCloud(
       url: 'https://test.supabase.co',

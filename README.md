@@ -12,9 +12,11 @@ Tâches et sous-tâches, projets, priorités, échéances datées et horaires, l
 
 La suppression d’un projet transfère ses tâches. Les exceptions de récurrence concernent l’occurrence courante. La résolution d’un conflit choisit une version complète de la tâche.
 
-## Version 0.8.5
+## Version 0.8.6
 
-Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Navigation directe depuis les widgets. Application Android : versionCode 26.
+Correction de la synchronisation bloquée sur les tâches supprimées : une absence locale et une suppression distante convergent automatiquement. Le choix explicite de conserver une tâche absente de cet appareil est désormais enregistré comme une suppression. Les véritables modifications concurrentes restent soumises à un choix, sans écrasement automatique.
+
+Pièces jointes cloud privées, suppression automatique après complétion et affichage sous les notes. Navigation directe depuis les widgets. Application Android : versionCode 27.
 
 - [Installation](distribution/INSTALL_PUBLIC.md)
 - [Compilation et signature](distribution/RELEASE.md)

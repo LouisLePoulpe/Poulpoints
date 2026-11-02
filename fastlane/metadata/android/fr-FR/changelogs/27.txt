@@ -1,0 +1,3 @@
+Correction des conflits répétés sur les tâches supprimées.
+Synchronisation automatique rétablie après résolution.
+Le choix de conserver une suppression locale est désormais enregistré correctement.

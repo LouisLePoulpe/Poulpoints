@@ -1,0 +1,3 @@
+Fix repeated synchronization conflicts involving deleted tasks.
+Automatically reconcile local absence with a remote deletion.
+Correctly persist the choice to keep a locally absent task deleted.

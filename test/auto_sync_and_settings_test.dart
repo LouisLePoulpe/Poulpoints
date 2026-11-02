@@ -50,7 +50,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Se connecter'), findsWidgets);
       expect(find.text('À propos'), findsOneWidget);
-      expect(find.text('Version 0.8.5 (build 26)'), findsOneWidget);
+      expect(find.text('Version 0.8.6 (build 27)'), findsOneWidget);
       await tester.scrollUntilVisible(
         find.text('Sauvegardes'),
         110,
