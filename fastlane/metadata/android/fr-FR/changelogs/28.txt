@@ -1,3 +1,3 @@
-Renommage des sous-tâches en touchant leur intitulé.
-Réorganisation des sous-tâches par glisser-déposer ou avec Monter / Descendre.
+Renommage et suppression des sous-tâches par le menu ⋮.
+Réorganisation des sous-tâches par appui long puis glisser, ou avec Monter / Descendre.
 L’ordre choisi est enregistré et synchronisé entre appareils.

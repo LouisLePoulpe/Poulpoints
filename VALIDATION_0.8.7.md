@@ -18,10 +18,13 @@ Les conflits restent gérés au niveau de la tâche : si deux appareils modifien
 Avant de commencer : exporter une sauvegarde JSON sur chaque appareil.
 
 - [ ] Mise à jour par-dessus la 0.8.6 (Linux puis Android) : tâches, sous-tâches, ordre, session cloud et projet par défaut intacts.
-- [ ] Renommer une sous-tâche en touchant son intitulé : texte nettoyé, état coché conservé.
+- [ ] Renommer une sous-tâche par le menu ⋮ > Renommer : texte nettoyé, état coché conservé.
+- [ ] Supprimer une sous-tâche par le menu ⋮ > Supprimer.
+- [ ] Toucher l’intitulé d’une sous-tâche la coche ou la décoche.
 - [ ] Renommer avec un intitulé vide ou seulement des espaces : message affiché, ancien intitulé conservé.
 - [ ] Annuler un renommage (Échap sous Linux, retour ou Annuler sous Android) : aucun changement.
-- [ ] Réordonner par glisser-déposer (poignée) sous Android, synchroniser, puis vérifier l’ordre sous Linux.
+- [ ] Sous Android, rester appuyé sur une sous-tâche : petite vibration, puis la déplacer. Un glissement rapide sans attendre ne déplace rien (et fait défiler). Synchroniser, puis vérifier l’ordre sous Linux.
+- [ ] Sous Linux, maintenir le clic sur une sous-tâche puis la déplacer.
 - [ ] Réordonner avec le menu ⋮ (Monter / Descendre) sous Linux, synchroniser, puis vérifier sous Android.
 - [ ] Réordonner dans l’écran « Modifier la tâche » (poignée et menu ⇅), enregistrer, rouvrir.
 - [ ] Réordonner hors ligne, revenir en ligne : l’ordre se propage.

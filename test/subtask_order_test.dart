@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -292,12 +293,42 @@ void main() {
     await tester.tap(find.text('Valise'));
     await tester.pumpAndSettle();
 
-    // Blank title is refused inside the dialog; Escape cancels untouched.
-    await tester.tap(find.text('Beta'));
+    final haptics = <String?>[];
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'HapticFeedback.vibrate') {
+          haptics.add(call.arguments as String?);
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    Future<void> menu(int row, String item) async {
+      await tester.tap(find.byTooltip('Options de la sous-tâche').at(row));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(item).last);
+      await tester.pumpAndSettle();
+    }
+
+    // Tapping a title toggles it, as the checkbox does.
+    await tester.tap(find.text('Alpha'));
     await tester.pumpAndSettle();
+    expect(repository.state.tasks.single.subtasks.first.done, isTrue);
+    await tester.tap(find.text('Alpha'));
+    await tester.pumpAndSettle();
+    expect(repository.state.tasks.single.subtasks.first.done, isFalse);
+
+    // Rename from the ⋮ menu: blank refused, Escape cancels untouched.
+    await menu(1, 'Renommer');
     expect(find.text('Renommer la sous-tâche'), findsOneWidget);
     await tester.enterText(find.byType(TextField).last, '   ');
-    await tester.tap(find.text('Renommer'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Renommer'));
     await tester.pumpAndSettle();
     expect(find.text('L’intitulé ne peut pas être vide.'), findsOneWidget);
     await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -305,8 +336,7 @@ void main() {
     expect(find.text('Renommer la sous-tâche'), findsNothing);
     expect(stored(), ['Alpha', 'Beta', 'Gamma']);
 
-    await tester.tap(find.text('Beta'));
-    await tester.pumpAndSettle();
+    await menu(1, 'Renommer');
     await tester.enterText(find.byType(TextField).last, '  Bouée ');
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pumpAndSettle();
@@ -315,21 +345,31 @@ void main() {
     expect(repository.state.tasks.single.subtasks[1].done, isTrue);
 
     // Keyboard/mouse alternative to dragging.
-    await tester.tap(find.byTooltip('Options de la sous-tâche').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Descendre'));
-    await tester.pumpAndSettle();
+    await menu(0, 'Descendre');
     expect(stored(), ['Bouée', 'Alpha', 'Gamma']);
 
-    // Drag the last handle above the first row.
-    final handle = find.byIcon(Icons.drag_handle).last;
-    final gesture = await tester.startGesture(tester.getCenter(handle));
-    await tester.pump(const Duration(milliseconds: 50));
+    // A quick drag without holding does not move anything.
+    await tester.drag(find.text('Gamma'), const Offset(0, -200));
+    await tester.pumpAndSettle();
+    expect(stored(), ['Bouée', 'Alpha', 'Gamma']);
+    expect(haptics, isEmpty);
+
+    // Hold, feel the vibration, then drag the last row to the top.
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.text('Gamma')),
+    );
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 50));
+    expect(haptics, isNotEmpty);
     await gesture.moveBy(const Offset(0, -200));
     await tester.pump(const Duration(milliseconds: 100));
     await gesture.up();
     await tester.pumpAndSettle();
     expect(stored(), ['Gamma', 'Bouée', 'Alpha']);
+
+    // Delete from the ⋮ menu.
+    await menu(1, 'Supprimer');
+    expect(stored(), ['Gamma', 'Alpha']);
+    expect(find.text('Bouée'), findsNothing);
 
     // Adding uses the same dialog: blank refused, new subtask goes last.
     await tester.tap(find.byTooltip('Ajouter une sous-tâche'));
@@ -340,7 +380,7 @@ void main() {
     await tester.enterText(find.byType(TextField).last, ' Delta ');
     await tester.tap(find.widgetWithText(FilledButton, 'Ajouter'));
     await tester.pumpAndSettle();
-    expect(stored(), ['Gamma', 'Bouée', 'Alpha', 'Delta']);
+    expect(stored(), ['Gamma', 'Alpha', 'Delta']);
     expect(tester.takeException(), isNull);
   });
 }

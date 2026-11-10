@@ -1483,42 +1483,30 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
           ],
         ),
         // Checked subtasks keep their place: order only changes on request.
+        // Long press (touch or mouse) picks a row up, with a haptic tick.
         ReorderableListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           buildDefaultDragHandles: false,
+          onReorderStart: (_) => HapticFeedback.mediumImpact(),
           onReorderItem: (from, to) => _moveSubtask(task, from, to, refresh),
           children: [
             for (final (index, sub) in task.subtasks.indexed)
-              Row(
+              ReorderableDelayedDragStartListener(
                 key: ValueKey('subtask_${sub.id}'),
-                children: [
-                  Checkbox(
-                    value: sub.done,
-                    onChanged: (value) {
-                      final changed = task.copyWith(
-                        subtasks: task.subtasks
-                            .map(
-                              (s) => s.id == sub.id
-                                  ? Subtask(
-                                      id: s.id,
-                                      title: s.title,
-                                      done: value ?? false,
-                                    )
-                                  : s,
-                            )
-                            .toList(),
-                      );
-                      _change(changed);
-                      refresh?.call();
-                    },
-                  ),
-                  Expanded(
-                    child: Tooltip(
-                      message: 'Appuyer pour renommer',
-                      waitDuration: const Duration(milliseconds: 800),
+                index: index,
+                enabled: task.subtasks.length > 1,
+                child: Row(
+                  children: [
+                    Checkbox(
+                      value: sub.done,
+                      onChanged: (value) =>
+                          _toggleSubtask(task, sub, value ?? false, refresh),
+                    ),
+                    Expanded(
                       child: InkWell(
-                        onTap: () => _renameSubtask(task, sub, refresh),
+                        onTap: () =>
+                            _toggleSubtask(task, sub, !sub.done, refresh),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           child: Text(
@@ -1532,61 +1520,41 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
                         ),
                       ),
                     ),
-                  ),
-                  PopupMenuButton<String>(
-                    tooltip: 'Options de la sous-tâche',
-                    icon: const Icon(Icons.more_vert, size: 18),
-                    onSelected: (action) => switch (action) {
-                      'rename' => _renameSubtask(task, sub, refresh),
-                      'up' => _moveSubtask(task, index, index - 1, refresh),
-                      _ => _moveSubtask(task, index, index + 1, refresh),
-                    },
-                    itemBuilder: (_) => [
-                      const PopupMenuItem(
-                        value: 'rename',
-                        child: Text('Renommer'),
-                      ),
-                      PopupMenuItem(
-                        value: 'up',
-                        enabled: index > 0,
-                        child: const Text('Monter'),
-                      ),
-                      PopupMenuItem(
-                        value: 'down',
-                        enabled: index < task.subtasks.length - 1,
-                        child: const Text('Descendre'),
-                      ),
-                    ],
-                  ),
-                  IconButton(
-                    tooltip: 'Supprimer la sous-tâche',
-                    icon: const Icon(Icons.close, size: 18),
-                    onPressed: () {
-                      _change(
-                        task.copyWith(
-                          subtasks: task.subtasks
-                              .where((s) => s.id != sub.id)
-                              .toList(),
+                    PopupMenuButton<String>(
+                      tooltip: 'Options de la sous-tâche',
+                      icon: const Icon(Icons.more_vert, size: 18),
+                      onSelected: (action) => switch (action) {
+                        'rename' => _renameSubtask(task, sub, refresh),
+                        'up' => _moveSubtask(task, index, index - 1, refresh),
+                        'down' => _moveSubtask(task, index, index + 1, refresh),
+                        _ => _deleteSubtask(task, sub, refresh),
+                      },
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
+                          value: 'rename',
+                          child: Text('Renommer'),
                         ),
-                      );
-                      refresh?.call();
-                    },
-                  ),
-                  if (task.subtasks.length > 1)
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: const Tooltip(
-                        message: 'Glisser pour réordonner',
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.grab,
-                          child: Padding(
-                            padding: EdgeInsets.all(8),
-                            child: Icon(Icons.drag_handle),
+                        PopupMenuItem(
+                          value: 'up',
+                          enabled: index > 0,
+                          child: const Text('Monter'),
+                        ),
+                        PopupMenuItem(
+                          value: 'down',
+                          enabled: index < task.subtasks.length - 1,
+                          child: const Text('Descendre'),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Text(
+                            'Supprimer',
+                            style: TextStyle(color: colors.error),
                           ),
                         ),
-                      ),
+                      ],
                     ),
-                ],
+                  ],
+                ),
               ),
           ],
         ),
@@ -1626,6 +1594,43 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  void _toggleSubtask(
+    Task task,
+    Subtask sub,
+    bool done,
+    VoidCallback? refresh,
+  ) {
+    final latest = _tasks.firstWhere(
+      (t) => t.id == task.id,
+      orElse: () => task,
+    );
+    _change(
+      latest.copyWith(
+        subtasks: latest.subtasks
+            .map(
+              (s) => s.id == sub.id
+                  ? Subtask(id: s.id, title: s.title, done: done)
+                  : s,
+            )
+            .toList(),
+      ),
+    );
+    refresh?.call();
+  }
+
+  void _deleteSubtask(Task task, Subtask sub, VoidCallback? refresh) {
+    final latest = _tasks.firstWhere(
+      (t) => t.id == task.id,
+      orElse: () => task,
+    );
+    _change(
+      latest.copyWith(
+        subtasks: latest.subtasks.where((s) => s.id != sub.id).toList(),
+      ),
+    );
+    refresh?.call();
   }
 
   void _moveSubtask(Task task, int from, int to, VoidCallback? refresh) {

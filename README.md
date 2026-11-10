@@ -14,7 +14,7 @@ La suppression d’un projet transfère ses tâches. Les exceptions de récurren
 
 ## Version 0.8.7
 
-Sous-tâches : renommage (appui sur l’intitulé ou menu), réorganisation par glisser-déposer ou avec Monter / Descendre. L’ordre choisi est celui de la liste déjà enregistrée dans chaque tâche : il est conservé, exporté et synchronisé, y compris avec les appareils encore en 0.8.6. Application Android : versionCode 28.
+Sous-tâches : renommage et suppression par le menu ⋮, réorganisation par appui long puis glisser (vibration au moment de la prise) ou avec Monter / Descendre. L’ordre choisi est celui de la liste déjà enregistrée dans chaque tâche : il est conservé, exporté et synchronisé, y compris avec les appareils encore en 0.8.6. Application Android : versionCode 28.
 
 ## Version 0.8.6
 

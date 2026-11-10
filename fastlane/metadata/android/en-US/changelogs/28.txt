@@ -1,3 +1,3 @@
-Rename subtasks by tapping their title.
-Reorder subtasks by drag and drop or with Move up / Move down.
+Rename or delete subtasks from the ⋮ menu.
+Reorder subtasks with a long press then drag, or with Move up / Move down.
 The chosen order is saved and synchronized between devices.
