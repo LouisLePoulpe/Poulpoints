@@ -10,7 +10,8 @@ import 'cloud/cloud_sync.dart';
 import 'cloud/session_store.dart';
 
 import 'task_editor.dart';
-import 'task_actions.dart' show moveOccurrence;
+import 'task_actions.dart'
+    show cleanSubtaskTitle, moveOccurrence, moveSubtask, renameSubtask;
 import 'models.dart';
 import 'deadline_status.dart';
 import 'app_metadata.dart';
@@ -1481,49 +1482,113 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
             ),
           ],
         ),
-        ...task.subtasks.map(
-          (sub) => CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            controlAffinity: ListTileControlAffinity.leading,
-            title: Text(
-              sub.title,
-              style: TextStyle(
-                decoration: sub.done ? TextDecoration.lineThrough : null,
-              ),
-            ),
-            value: sub.done,
-            onChanged: (value) {
-              final changed = task.copyWith(
-                subtasks: task.subtasks
-                    .map(
-                      (s) => s.id == sub.id
-                          ? Subtask(
-                              id: s.id,
-                              title: s.title,
-                              done: value ?? false,
+        // Checked subtasks keep their place: order only changes on request.
+        ReorderableListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          onReorderItem: (from, to) => _moveSubtask(task, from, to, refresh),
+          children: [
+            for (final (index, sub) in task.subtasks.indexed)
+              Row(
+                key: ValueKey('subtask_${sub.id}'),
+                children: [
+                  Checkbox(
+                    value: sub.done,
+                    onChanged: (value) {
+                      final changed = task.copyWith(
+                        subtasks: task.subtasks
+                            .map(
+                              (s) => s.id == sub.id
+                                  ? Subtask(
+                                      id: s.id,
+                                      title: s.title,
+                                      done: value ?? false,
+                                    )
+                                  : s,
                             )
-                          : s,
-                    )
-                    .toList(),
-              );
-              _change(changed);
-              refresh?.call();
-            },
-            secondary: IconButton(
-              tooltip: 'Supprimer la sous-tâche',
-              icon: const Icon(Icons.close, size: 18),
-              onPressed: () {
-                _change(
-                  task.copyWith(
-                    subtasks: task.subtasks
-                        .where((s) => s.id != sub.id)
-                        .toList(),
+                            .toList(),
+                      );
+                      _change(changed);
+                      refresh?.call();
+                    },
                   ),
-                );
-                refresh?.call();
-              },
-            ),
-          ),
+                  Expanded(
+                    child: Tooltip(
+                      message: 'Appuyer pour renommer',
+                      waitDuration: const Duration(milliseconds: 800),
+                      child: InkWell(
+                        onTap: () => _renameSubtask(task, sub, refresh),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            sub.title,
+                            style: TextStyle(
+                              decoration: sub.done
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'Options de la sous-tâche',
+                    icon: const Icon(Icons.more_vert, size: 18),
+                    onSelected: (action) => switch (action) {
+                      'rename' => _renameSubtask(task, sub, refresh),
+                      'up' => _moveSubtask(task, index, index - 1, refresh),
+                      _ => _moveSubtask(task, index, index + 1, refresh),
+                    },
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
+                        value: 'rename',
+                        child: Text('Renommer'),
+                      ),
+                      PopupMenuItem(
+                        value: 'up',
+                        enabled: index > 0,
+                        child: const Text('Monter'),
+                      ),
+                      PopupMenuItem(
+                        value: 'down',
+                        enabled: index < task.subtasks.length - 1,
+                        child: const Text('Descendre'),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    tooltip: 'Supprimer la sous-tâche',
+                    icon: const Icon(Icons.close, size: 18),
+                    onPressed: () {
+                      _change(
+                        task.copyWith(
+                          subtasks: task.subtasks
+                              .where((s) => s.id != sub.id)
+                              .toList(),
+                        ),
+                      );
+                      refresh?.call();
+                    },
+                  ),
+                  if (task.subtasks.length > 1)
+                    ReorderableDragStartListener(
+                      index: index,
+                      child: const Tooltip(
+                        message: 'Glisser pour réordonner',
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.grab,
+                          child: Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Icon(Icons.drag_handle),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
         ),
         if (task.subtasks.isEmpty)
           Text(
@@ -1561,6 +1626,75 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  void _moveSubtask(Task task, int from, int to, VoidCallback? refresh) {
+    final latest = _tasks.firstWhere(
+      (t) => t.id == task.id,
+      orElse: () => task,
+    );
+    final moved = moveSubtask(latest, from, to);
+    if (identical(moved, latest)) return;
+    _change(moved);
+    refresh?.call();
+  }
+
+  Future<void> _renameSubtask(
+    Task task,
+    Subtask sub,
+    VoidCallback? refresh,
+  ) async {
+    if (!_canEdit) return;
+    final controller = TextEditingController(
+      text: sub.title,
+    )..selection = TextSelection(baseOffset: 0, extentOffset: sub.title.length);
+    String? error;
+    // Escape (Linux) and back (Android) dismiss the dialog with null.
+    final title = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          void submit() {
+            final clean = cleanSubtaskTitle(controller.text);
+            if (clean == null) {
+              setDialogState(() => error = 'L’intitulé ne peut pas être vide.');
+            } else {
+              Navigator.pop(ctx, clean);
+            }
+          }
+
+          return AlertDialog(
+            title: const Text('Renommer la sous-tâche'),
+            content: TextField(
+              autofocus: true,
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: 'Sous-tâche',
+                errorText: error,
+              ),
+              onSubmitted: (_) => submit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Annuler'),
+              ),
+              FilledButton(onPressed: submit, child: const Text('Renommer')),
+            ],
+          );
+        },
+      ),
+    );
+    controller.dispose();
+    if (title == null || !mounted) return;
+    final latest = _tasks.firstWhere(
+      (t) => t.id == task.id,
+      orElse: () => task,
+    );
+    final renamed = renameSubtask(latest, sub.id, title);
+    if (identical(renamed, latest)) return;
+    _change(renamed);
+    refresh?.call();
   }
 
   Future<void> _addSubtask(Task task, VoidCallback? refresh) async {

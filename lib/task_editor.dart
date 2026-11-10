@@ -109,6 +109,11 @@ class _TaskEditorState extends State<TaskEditor> {
     super.dispose();
   }
 
+  void moveSub(int from, int to) {
+    if (to < 0 || to >= subs.length || from == to) return;
+    setState(() => subs.insert(to, subs.removeAt(from)));
+  }
+
   void save() {
     if (!form.currentState!.validate()) return;
     Navigator.pop(
@@ -569,32 +574,74 @@ class _TaskEditorState extends State<TaskEditor> {
         ),
         const SizedBox(height: 14),
         const Text('Sous-tâches'),
-        for (final sub in subs)
-          Padding(
-            key: ValueKey(sub.id),
-            padding: const EdgeInsets.only(top: 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: sub.text,
-                    decoration: const InputDecoration(labelText: 'Sous-tâche'),
-                    validator: (value) => value!.trim().isEmpty
-                        ? 'Saisissez un titre ou supprimez cette ligne.'
-                        : null,
-                  ),
+        ReorderableListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          onReorderItem: moveSub,
+          children: [
+            for (final (index, sub) in subs.indexed)
+              Padding(
+                key: ValueKey(sub.id),
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: sub.text,
+                        decoration: const InputDecoration(
+                          labelText: 'Sous-tâche',
+                        ),
+                        validator: (value) => value!.trim().isEmpty
+                            ? 'Saisissez un titre ou supprimez cette ligne.'
+                            : null,
+                      ),
+                    ),
+                    if (subs.length > 1)
+                      PopupMenuButton<int>(
+                        tooltip: 'Déplacer la sous-tâche',
+                        icon: const Icon(Icons.swap_vert),
+                        onSelected: (to) => moveSub(index, to),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: index - 1,
+                            enabled: index > 0,
+                            child: const Text('Monter'),
+                          ),
+                          PopupMenuItem(
+                            value: index + 1,
+                            enabled: index < subs.length - 1,
+                            child: const Text('Descendre'),
+                          ),
+                        ],
+                      ),
+                    IconButton(
+                      tooltip: 'Supprimer la sous-tâche',
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(() {
+                        subs.remove(sub);
+                        retired.add(sub.text);
+                      }),
+                    ),
+                    if (subs.length > 1)
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: const Tooltip(
+                          message: 'Glisser pour réordonner',
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.grab,
+                            child: Padding(
+                              padding: EdgeInsets.all(8),
+                              child: Icon(Icons.drag_handle),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                IconButton(
-                  tooltip: 'Supprimer la sous-tâche',
-                  icon: const Icon(Icons.close),
-                  onPressed: () => setState(() {
-                    subs.remove(sub);
-                    retired.add(sub.text);
-                  }),
-                ),
-              ],
-            ),
-          ),
+              ),
+          ],
+        ),
         TextButton.icon(
           onPressed: () => setState(
             () => subs.add((
