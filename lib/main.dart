@@ -1645,47 +1645,11 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
     VoidCallback? refresh,
   ) async {
     if (!_canEdit) return;
-    final controller = TextEditingController(
-      text: sub.title,
-    )..selection = TextSelection(baseOffset: 0, extentOffset: sub.title.length);
-    String? error;
     // Escape (Linux) and back (Android) dismiss the dialog with null.
     final title = await showDialog<String>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) {
-          void submit() {
-            final clean = cleanSubtaskTitle(controller.text);
-            if (clean == null) {
-              setDialogState(() => error = 'L’intitulé ne peut pas être vide.');
-            } else {
-              Navigator.pop(ctx, clean);
-            }
-          }
-
-          return AlertDialog(
-            title: const Text('Renommer la sous-tâche'),
-            content: TextField(
-              autofocus: true,
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: 'Sous-tâche',
-                errorText: error,
-              ),
-              onSubmitted: (_) => submit(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Annuler'),
-              ),
-              FilledButton(onPressed: submit, child: const Text('Renommer')),
-            ],
-          );
-        },
-      ),
+      builder: (_) => _SubtaskTitleDialog(initial: sub.title),
     );
-    controller.dispose();
     if (title == null || !mounted) return;
     final latest = _tasks.firstWhere(
       (t) => t.id == task.id,
@@ -2511,4 +2475,54 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
             ),
     );
   }
+}
+
+/// Owns its controller so the closing animation never sees a disposed one.
+class _SubtaskTitleDialog extends StatefulWidget {
+  const _SubtaskTitleDialog({required this.initial});
+  final String initial;
+  @override
+  State<_SubtaskTitleDialog> createState() => _SubtaskTitleDialogState();
+}
+
+class _SubtaskTitleDialogState extends State<_SubtaskTitleDialog> {
+  late final controller = TextEditingController(text: widget.initial)
+    ..selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.initial.length,
+    );
+  String? error;
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  void submit() {
+    final clean = cleanSubtaskTitle(controller.text);
+    if (clean == null) {
+      setState(() => error = 'L’intitulé ne peut pas être vide.');
+    } else {
+      Navigator.pop(context, clean);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Renommer la sous-tâche'),
+    content: TextField(
+      autofocus: true,
+      controller: controller,
+      decoration: InputDecoration(labelText: 'Sous-tâche', errorText: error),
+      onSubmitted: (_) => submit(),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Annuler'),
+      ),
+      FilledButton(onPressed: submit, child: const Text('Renommer')),
+    ],
+  );
 }
