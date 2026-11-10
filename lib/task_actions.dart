@@ -61,3 +61,39 @@ Task moveOccurrence(Task task, DateTime date) => task.copyWith(
   occurrenceAnchor: task.occurrenceAnchor ?? task.dueDate,
   clearSnooze: true,
 );
+
+// Subtask order is the list order itself: it is what the JSON payload, the
+// cloud signature and older clients already store, so no extra field exists.
+
+/// Trimmed title, or null when blank (the caller keeps the previous title).
+String? cleanSubtaskTitle(String raw) {
+  final title = raw.trim();
+  return title.isEmpty ? null : title;
+}
+
+/// Same id and completion state; returns [task] itself when nothing changes,
+/// so an unchanged dialog does not bump `updatedAt` or trigger a sync push.
+Task renameSubtask(Task task, String id, String title) {
+  final index = task.subtasks.indexWhere((s) => s.id == id);
+  final clean = cleanSubtaskTitle(title);
+  if (index < 0 || clean == null || task.subtasks[index].title == clean) {
+    return task;
+  }
+  final old = task.subtasks[index];
+  return task.copyWith(
+    subtasks: [...task.subtasks]
+      ..[index] = Subtask(id: old.id, title: clean, done: old.done),
+  );
+}
+
+/// Moves the subtask at [from] so that it ends at index [to].
+/// Out-of-range or identical indices return [task] unchanged.
+Task moveSubtask(Task task, int from, int to) {
+  final length = task.subtasks.length;
+  if (from < 0 || from >= length || to < 0 || to >= length || from == to) {
+    return task;
+  }
+  final subtasks = [...task.subtasks];
+  subtasks.insert(to, subtasks.removeAt(from));
+  return task.copyWith(subtasks: subtasks);
+}
