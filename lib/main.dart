@@ -1648,7 +1648,11 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
     // Escape (Linux) and back (Android) dismiss the dialog with null.
     final title = await showDialog<String>(
       context: context,
-      builder: (_) => _SubtaskTitleDialog(initial: sub.title),
+      builder: (_) => _SubtaskTitleDialog(
+        initial: sub.title,
+        heading: 'Renommer la sous-tâche',
+        action: 'Renommer',
+      ),
     );
     if (title == null || !mounted) return;
     final latest = _tasks.firstWhere(
@@ -1663,29 +1667,14 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
 
   Future<void> _addSubtask(Task task, VoidCallback? refresh) async {
     if (!_canEdit) return;
-    final controller = TextEditingController();
     final title = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Ajouter une sous-tâche'),
-        content: TextField(
-          autofocus: true,
-          controller: controller,
-          decoration: const InputDecoration(labelText: 'Sous-tâche'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Ajouter'),
-          ),
-        ],
+      builder: (_) => const _SubtaskTitleDialog(
+        initial: '',
+        heading: 'Ajouter une sous-tâche',
+        action: 'Ajouter',
       ),
     );
-    controller.dispose();
     if (title == null || title.isEmpty) return;
     final latest = _tasks.firstWhere((t) => t.id == task.id);
     _change(
@@ -2479,8 +2468,14 @@ class _TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
 
 /// Owns its controller so the closing animation never sees a disposed one.
 class _SubtaskTitleDialog extends StatefulWidget {
-  const _SubtaskTitleDialog({required this.initial});
+  const _SubtaskTitleDialog({
+    required this.initial,
+    required this.heading,
+    required this.action,
+  });
   final String initial;
+  final String heading;
+  final String action;
   @override
   State<_SubtaskTitleDialog> createState() => _SubtaskTitleDialogState();
 }
@@ -2510,7 +2505,7 @@ class _SubtaskTitleDialogState extends State<_SubtaskTitleDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Renommer la sous-tâche'),
+    title: Text(widget.heading),
     content: TextField(
       autofocus: true,
       controller: controller,
@@ -2522,7 +2517,7 @@ class _SubtaskTitleDialogState extends State<_SubtaskTitleDialog> {
         onPressed: () => Navigator.pop(context),
         child: const Text('Annuler'),
       ),
-      FilledButton(onPressed: submit, child: const Text('Renommer')),
+      FilledButton(onPressed: submit, child: Text(widget.action)),
     ],
   );
 }

@@ -330,6 +330,17 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
     expect(stored(), ['Gamma', 'Bouée', 'Alpha']);
+
+    // Adding uses the same dialog: blank refused, new subtask goes last.
+    await tester.tap(find.byTooltip('Ajouter une sous-tâche'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Ajouter'));
+    await tester.pumpAndSettle();
+    expect(find.text('L’intitulé ne peut pas être vide.'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).last, ' Delta ');
+    await tester.tap(find.widgetWithText(FilledButton, 'Ajouter'));
+    await tester.pumpAndSettle();
+    expect(stored(), ['Gamma', 'Bouée', 'Alpha', 'Delta']);
     expect(tester.takeException(), isNull);
   });
 }
