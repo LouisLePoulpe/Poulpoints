@@ -51,7 +51,7 @@ void main() {
   });
 
   test('Version displayed in About corresponds to source release', () {
-    expect(poulpointsFullVersion, '0.8.6+27');
+    expect(poulpointsFullVersion, '0.8.7+28');
   });
 
   testWidgets('New date defaults to on-time reminder even without hour', (tester) async {

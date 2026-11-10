@@ -12,6 +12,10 @@ Tâches et sous-tâches, projets, priorités, échéances datées et horaires, l
 
 La suppression d’un projet transfère ses tâches. Les exceptions de récurrence concernent l’occurrence courante. La résolution d’un conflit choisit une version complète de la tâche.
 
+## Version 0.8.7
+
+Sous-tâches : renommage (appui sur l’intitulé ou menu), réorganisation par glisser-déposer ou avec Monter / Descendre. L’ordre choisi est celui de la liste déjà enregistrée dans chaque tâche : il est conservé, exporté et synchronisé, y compris avec les appareils encore en 0.8.6. Application Android : versionCode 28.
+
 ## Version 0.8.6
 
 Correction de la synchronisation bloquée sur les tâches supprimées : une absence locale et une suppression distante convergent automatiquement. Le choix explicite de conserver une tâche absente de cet appareil est désormais enregistré comme une suppression. Les véritables modifications concurrentes restent soumises à un choix, sans écrasement automatique.
